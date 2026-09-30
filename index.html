@@ -38,6 +38,7 @@
     --n1: #0f4a8a; --n2: #16603a; --n3: #8a3300; --n4: #4a2f86;
     --n5: #7a1f45; --n6: #0b5558; --n7: #1c1a17; --n8: #46423c;
     --num-scale: 0.64;
+    --num-stroke: 0.045em;  /* dark-on-light digits look thinner; thicken them to match dark mode */
     --panel: #ece8e0; --scrim: rgb(30 28 24 / 0.35);
     --font-ui: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Hiragino Sans", "PingFang SC", system-ui, sans-serif;
     --font-num: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -54,6 +55,7 @@
       --n5: #ff8fb3; --n6: #5ce1e6; --n7: #e6edf3; --n8: #b0b8c0;
       --panel: #161a1e; --scrim: rgb(0 0 0 / 0.55);
       --num-scale: 0.58;
+      --num-stroke: 0;
       color-scheme: dark;
     }
   }
@@ -66,6 +68,7 @@
     --n5: #ff8fb3; --n6: #5ce1e6; --n7: #e6edf3; --n8: #b0b8c0;
     --panel: #161a1e; --scrim: rgb(0 0 0 / 0.55);
     --num-scale: 0.58;
+    --num-stroke: 0;
     color-scheme: dark;
   }
 
@@ -173,6 +176,7 @@
     .cell.hint { animation: pulse 0.5s ease-in-out 4 alternate; }
     @keyframes pulse { from { filter: brightness(1); transform: scale(1); } to { filter: brightness(1.25); transform: scale(1.15); } }
   }
+  .cell.num { -webkit-text-stroke: var(--num-stroke) currentColor; }
   .n1 { color: var(--n1); } .n2 { color: var(--n2); } .n3 { color: var(--n3); } .n4 { color: var(--n4); }
   .n5 { color: var(--n5); } .n6 { color: var(--n6); } .n7 { color: var(--n7); } .n8 { color: var(--n8); }
 
