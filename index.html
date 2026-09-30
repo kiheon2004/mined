@@ -32,11 +32,12 @@
   /* Light = soft paper-toned board (dimmer open cells, less glare), dark = palette B (slate board). Tile edges and numbers meet WCAG 3:1 / 4.5:1. */
   :root {
     --ground: #e3e0d9; --grid: #d8d4cb; --ink: #2a2825; --muted: #69645c;
-    --tile: #b3aea4; --tile-hi: #cbc6bc; --tile-lo: #5a554d;
+    --tile: #b3aea4; --tile-hi: #bfbab0; --tile-lo: #5a554d;
     --open: #e9e5dc; --open-line: #d3cec3;
     --accent: #9a3f0e; --boom: #b3261e; --hint: #1f8a5b;
-    --n1: #1f5c99; --n2: #2b6e48; --n3: #9a3f0e; --n4: #584290;
-    --n5: #8c3152; --n6: #1b666a; --n7: #2a2825; --n8: #57534c;
+    --n1: #0f4a8a; --n2: #16603a; --n3: #8a3300; --n4: #4a2f86;
+    --n5: #7a1f45; --n6: #0b5558; --n7: #1c1a17; --n8: #46423c;
+    --num-scale: 0.64;
     --panel: #ece8e0; --scrim: rgb(30 28 24 / 0.35);
     --font-ui: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Hiragino Sans", "PingFang SC", system-ui, sans-serif;
     --font-num: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -52,6 +53,7 @@
       --n1: #6cb6ff; --n2: #4fd1a1; --n3: #ffb454; --n4: #c9a7ff;
       --n5: #ff8fb3; --n6: #5ce1e6; --n7: #e6edf3; --n8: #b0b8c0;
       --panel: #161a1e; --scrim: rgb(0 0 0 / 0.55);
+      --num-scale: 0.58;
       color-scheme: dark;
     }
   }
@@ -63,6 +65,7 @@
     --n1: #6cb6ff; --n2: #4fd1a1; --n3: #ffb454; --n4: #c9a7ff;
     --n5: #ff8fb3; --n6: #5ce1e6; --n7: #e6edf3; --n8: #b0b8c0;
     --panel: #161a1e; --scrim: rgb(0 0 0 / 0.55);
+    --num-scale: 0.58;
     color-scheme: dark;
   }
 
@@ -133,7 +136,7 @@
   .play { margin: auto; display: grid; gap: 10px; justify-items: center; }
   .hud {
     display: grid; grid-template-columns: auto auto 1fr auto auto; column-gap: 8px; row-gap: 3px;
-    width: 100%; min-width: min(420px, 100%); font-size: 13.5px; font-variant-numeric: tabular-nums;
+    width: min(100%, 520px); font-size: 13.5px; font-variant-numeric: tabular-nums;
   }
   .hud dt { color: var(--muted); text-align: right; }
   .hud dd { margin: 0; font-weight: 600; }
@@ -151,7 +154,7 @@
     --bev: max(1px, calc(var(--cell) * 0.07));
     width: var(--cell); height: var(--cell); padding: 0; margin: 0; border: 0;
     display: grid; place-items: center; cursor: pointer;
-    font: 800 calc(var(--cell) * 0.58) var(--font-num); line-height: 1;
+    font: 800 calc(var(--cell) * var(--num-scale)) var(--font-num); line-height: 1;
     background: var(--tile); color: var(--ink);
     box-shadow: inset var(--bev) var(--bev) 0 var(--tile-hi), inset calc(var(--bev) * -1) calc(var(--bev) * -1) 0 var(--tile-lo);
   }
