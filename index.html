@@ -149,7 +149,7 @@
     box-shadow: inset var(--bev) var(--bev) 0 var(--tile-hi), inset calc(var(--bev) * -1) calc(var(--bev) * -1) 0 var(--tile-lo);
   }
   .cell:hover:not(.open) { filter: brightness(1.07); }
-  .cell:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; position: relative; z-index: 1; }
+  .cell:focus, .cell:focus-visible { outline: none; }  /* no orange focus ring on the clicked cell */
   .cell.open { background: var(--open); box-shadow: inset 0 0 0 0.5px var(--open-line); cursor: default; }
   .cell.open.num { cursor: pointer; }
   .cell.flag::after { content: ""; width: 42%; height: 46%; background: var(--accent);
