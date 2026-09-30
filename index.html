@@ -13,7 +13,8 @@
 <meta property="og:url" content="https://playmined.com/">
 <meta property="og:image" content="https://playmined.com/icon-512.png">
 <meta property="og:locale" content="ko_KR">
-<meta name="theme-color" content="#141916">
+<meta name="theme-color" content="#eceef0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1215" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -28,14 +29,15 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&family=JetBrains+Mono:wght@700;800&display=swap">
 <style>
   /* Layout: the minefield sits dead-center of the page; a faint vertical menu floats on the left and wakes on hover. */
+  /* Light = palette A (light gray board), dark = palette B (slate board). Tile edges and numbers meet WCAG 3:1 / 4.5:1. */
   :root {
-    --ground: #e9ece6; --grid: #dde2d8; --ink: #1e2521; --muted: #5d6a61;
-    --tile: #c9d2c4; --tile-hi: #dfe6da; --tile-lo: #9fab99;
-    --open: #f6f7f3; --open-line: #d9ded5;
-    --accent: #c2410c; --boom: #b91c1c; --hint: #0e9f6e;
-    --n1: #1d4ed8; --n2: #15803d; --n3: #c2410c; --n4: #6d28d9;
-    --n5: #9f1239; --n6: #0f766e; --n7: #1e2521; --n8: #57534e;
-    --panel: #f6f7f3; --scrim: rgb(20 26 22 / 0.35);
+    --ground: #eceef0; --grid: #dfe3e7; --ink: #1b1f23; --muted: #5b636b;
+    --tile: #aab2ba; --tile-hi: #dde2e7; --tile-lo: #4f575f;
+    --open: #f6f7f8; --open-line: #cfd4d9;
+    --accent: #a33a00; --boom: #b91c1c; --hint: #0e9f6e;
+    --n1: #0060a0; --n2: #00785a; --n3: #b34700; --n4: #5a3a9a;
+    --n5: #9c2a5c; --n6: #006d77; --n7: #1b1f23; --n8: #555b61;
+    --panel: #f6f7f8; --scrim: rgb(20 24 28 / 0.35);
     --font-ui: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Hiragino Sans", "PingFang SC", system-ui, sans-serif;
     --font-num: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
     --menu-w: 172px;
@@ -43,24 +45,24 @@
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --ground: #141916; --grid: #1a201c; --ink: #e4e9e3; --muted: #93a096;
-      --tile: #3b4a40; --tile-hi: #4d5e52; --tile-lo: #26302a;
-      --open: #1f2622; --open-line: #2b342e;
-      --accent: #fb923c; --boom: #ef4444; --hint: #34d399;
-      --n1: #7aa7ff; --n2: #5ed48a; --n3: #fb923c; --n4: #c4a1ff;
-      --n5: #fb7185; --n6: #5eead4; --n7: #e4e9e3; --n8: #a8a29e;
-      --panel: #1a201c; --scrim: rgb(0 0 0 / 0.55);
+      --ground: #0f1215; --grid: #161a1e; --ink: #e6edf3; --muted: #93a0ab;
+      --tile: #606b76; --tile-hi: #7d8894; --tile-lo: #101316;
+      --open: #1e2226; --open-line: #30363c;
+      --accent: #ffb454; --boom: #ef4444; --hint: #34d399;
+      --n1: #6cb6ff; --n2: #4fd1a1; --n3: #ffb454; --n4: #c9a7ff;
+      --n5: #ff8fb3; --n6: #5ce1e6; --n7: #e6edf3; --n8: #b0b8c0;
+      --panel: #161a1e; --scrim: rgb(0 0 0 / 0.55);
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
-    --ground: #141916; --grid: #1a201c; --ink: #e4e9e3; --muted: #93a096;
-    --tile: #3b4a40; --tile-hi: #4d5e52; --tile-lo: #26302a;
-    --open: #1f2622; --open-line: #2b342e;
-    --accent: #fb923c; --boom: #ef4444; --hint: #34d399;
-    --n1: #7aa7ff; --n2: #5ed48a; --n3: #fb923c; --n4: #c4a1ff;
-    --n5: #fb7185; --n6: #5eead4; --n7: #e4e9e3; --n8: #a8a29e;
-    --panel: #1a201c; --scrim: rgb(0 0 0 / 0.55);
+    --ground: #0f1215; --grid: #161a1e; --ink: #e6edf3; --muted: #93a0ab;
+    --tile: #606b76; --tile-hi: #7d8894; --tile-lo: #101316;
+    --open: #1e2226; --open-line: #30363c;
+    --accent: #ffb454; --boom: #ef4444; --hint: #34d399;
+    --n1: #6cb6ff; --n2: #4fd1a1; --n3: #ffb454; --n4: #c9a7ff;
+    --n5: #ff8fb3; --n6: #5ce1e6; --n7: #e6edf3; --n8: #b0b8c0;
+    --panel: #161a1e; --scrim: rgb(0 0 0 / 0.55);
     color-scheme: dark;
   }
 
@@ -107,6 +109,10 @@
                  color: var(--ink); font: 700 14px var(--font-num); cursor: pointer; padding: 0; }
   .zoom output { flex: 1; text-align: center; font: 700 12px var(--font-num); color: var(--muted); }
   .zoom .fit { width: auto; padding: 0 7px; font: 600 11px var(--font-ui); }
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 4px 4px 0; }
+  .modes button { font: 500 12px var(--font-ui); background: none; border: 1px solid transparent; color: var(--muted);
+                  border-radius: 5px; padding: 4px 6px; cursor: pointer; }
+  .modes button[aria-pressed="true"] { color: var(--ink); border-color: var(--open-line); background: var(--panel); }
   .langs { display: grid; grid-template-columns: repeat(2, max-content); justify-content: start; gap: 3px; padding: 0 4px; }
   .langs button { font: 500 12px var(--font-ui); background: none; border: 1px solid transparent; color: var(--muted);
                   border-radius: 5px; padding: 3px 6px; cursor: pointer; }
@@ -115,7 +121,7 @@
   .custom label { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
   .custom input { width: 64px; padding: 4px 6px; border: 1px solid var(--open-line); border-radius: 6px;
                   background: var(--open); color: var(--ink); font: 700 12px var(--font-num); }
-  .custom .go { font: 600 12px var(--font-ui); background: var(--accent); color: #fff; border: 0; border-radius: 6px; padding: 6px; cursor: pointer; }
+  .custom .go { font: 600 12px var(--font-ui); background: var(--accent); color: var(--ground); border: 0; border-radius: 6px; padding: 6px; cursor: pointer; }
   .custom .err { margin: 0; color: var(--boom); font-size: 11.5px; }
 
   /* ---------- stage (board centered on the whole page) ---------- */
@@ -222,6 +228,10 @@
       <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
       <button type="button" class="fit" id="zoomFit">맞춤</button>
     </div>
+    <div class="modes" id="modes">
+      <button type="button" data-mode="light" id="modeLight">밝은 모드</button>
+      <button type="button" data-mode="dark" id="modeDark">어두운 모드</button>
+    </div>
   </div>
 
   <div class="group">
@@ -313,7 +323,7 @@
   // ---------- text ----------
   const T = {
     ko: {
-      title: "지뢰찾기", game: "게임", new: "새 게임", restart: "게임 재시작", level: "난이도", view: "보기", fit: "맞춤",
+      title: "지뢰찾기", modeLight: "밝은 모드", modeDark: "어두운 모드", game: "게임", new: "새 게임", restart: "게임 재시작", level: "난이도", view: "보기", fit: "맞춤",
       help: "도움", hint: "힌트 요청", stats: "통계", lang: "언어", time: "시간", best: "최고",
       diff: "난이도", mode: "모드", modeVal: "첫 시도 보장", gameNo: "게임 번호", minesLeft: "남은 지뢰 수", cellsLeft: "남은 칸 수",
       w: "가로", h: "세로", m: "지뢰", start: "시작",
@@ -329,7 +339,7 @@
       resetAsk: "모든 통계를 지울까요?", resetYes: "지우기", sec: s => `${s}초`,
     },
     en: {
-      title: "Minesweeper", game: "Game", new: "New game", restart: "Restart", level: "Difficulty", view: "View", fit: "Fit",
+      title: "Minesweeper", modeLight: "Light", modeDark: "Dark", game: "Game", new: "New game", restart: "Restart", level: "Difficulty", view: "View", fit: "Fit",
       help: "Help", hint: "Get a hint", stats: "Statistics", lang: "Language", time: "Time", best: "Best",
       diff: "Difficulty", mode: "Mode", modeVal: "Safe first click", gameNo: "Game no.", minesLeft: "Mines left", cellsLeft: "Cells left",
       w: "Width", h: "Height", m: "Mines", start: "Start",
@@ -345,7 +355,7 @@
       resetAsk: "Clear all statistics?", resetYes: "Clear", sec: s => `${s}s`,
     },
     ja: {
-      title: "マインスイーパー", game: "ゲーム", new: "新しいゲーム", restart: "リスタート", level: "難易度", view: "表示", fit: "全体",
+      title: "マインスイーパー", modeLight: "ライト", modeDark: "ダーク", game: "ゲーム", new: "新しいゲーム", restart: "リスタート", level: "難易度", view: "表示", fit: "全体",
       help: "ヘルプ", hint: "ヒント", stats: "統計", lang: "言語", time: "時間", best: "ベスト",
       diff: "難易度", mode: "モード", modeVal: "初手保証", gameNo: "ゲーム番号", minesLeft: "残り地雷数", cellsLeft: "残りマス数",
       w: "幅", h: "高さ", m: "地雷", start: "開始",
@@ -361,7 +371,7 @@
       resetAsk: "すべての統計を消去しますか?", resetYes: "消去", sec: s => `${s}秒`,
     },
     zh: {
-      title: "扫雷", game: "游戏", new: "新游戏", restart: "重新开始", level: "难度", view: "视图", fit: "适应",
+      title: "扫雷", modeLight: "浅色", modeDark: "深色", game: "游戏", new: "新游戏", restart: "重新开始", level: "难度", view: "视图", fit: "适应",
       help: "帮助", hint: "提示", stats: "统计", lang: "语言", time: "时间", best: "最佳",
       diff: "难度", mode: "模式", modeVal: "首次点击安全", gameNo: "游戏编号", minesLeft: "剩余地雷", cellsLeft: "剩余格数",
       w: "宽", h: "高", m: "地雷", start: "开始",
@@ -684,7 +694,7 @@
     document.documentElement.lang = lang;
     document.title = t.title === "지뢰찾기" ? "지뢰찾기 온라인 | MINE:D" : `${t.title} Online | MINE:D`;
     const map = { "t-game": t.game, "t-new": t.new, "t-restart": t.restart, "t-level": t.level,
-      "t-view": t.view, "zoomFit": t.fit, "t-help": t.help, "t-hint": t.hint, "t-stats": t.stats, "t-lang": t.lang,
+      "t-view": t.view, "modeLight": t.modeLight, "modeDark": t.modeDark, "zoomFit": t.fit, "t-help": t.help, "t-hint": t.hint, "t-stats": t.stats, "t-lang": t.lang,
       "t-time": t.time + ":", "t-diff": t.diff + ":", "t-mode": t.mode + ":", "t-gameNo": t.gameNo + ":",
       "t-minesLeft": t.minesLeft + ":", "t-cellsLeft": t.cellsLeft + ":", "t-w": t.w, "t-h": t.h, "t-m": t.m, "t-start": t.start,
       "t-controls": t.controls, "t-statsTitle": t.statsTitle, "statsClose": t.close, "statsReset": t.reset,
@@ -786,6 +796,22 @@
   });
 
   addEventListener("pagehide", () => { if (started && !over) bankTime(); });
+
+
+  // ---------- color mode (light = A, dark = B); follows the device until the player picks one ----------
+  function currentMode() {
+    const t = document.documentElement.dataset.theme;
+    return t === "light" || t === "dark" ? t : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  }
+  function paintModes() {
+    const m = currentMode();
+    $("modes").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === m)));
+  }
+  function setMode(m) { document.documentElement.dataset.theme = m; write("minesweeper-mode", m); paintModes(); }
+  { const saved = read("minesweeper-mode", null); if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved; }
+  $("modes").addEventListener("click", e => { const b = e.target.closest("button[data-mode]"); if (b) setMode(b.dataset.mode); });
+  matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", paintModes);
+  paintModes();
 
   // ---------- boot ----------
   newGame();
