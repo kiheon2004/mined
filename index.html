@@ -740,13 +740,14 @@
       open[i] ? chord(i) : toggleFlag(i);
       return;
     }
-    const k = e.key.toLowerCase();
-    if (k === "n") newGame();
-    else if (k === "r") restart();
-    else if (k === "h") hint();
-    else if (k === "s") openStats();
-    else if (k === "+" || k === "=") zoom(1);
-    else if (k === "-" || k === "_") zoom(-1);
+    // Match the physical key (e.code) so shortcuts work in Korean/Japanese/Chinese input mode too.
+    const c = e.code;
+    if (c === "KeyN") newGame();
+    else if (c === "KeyR") restart();
+    else if (c === "KeyH") hint();
+    else if (c === "KeyS") openStats();
+    else if (c === "Equal" || c === "NumpadAdd") zoom(1);
+    else if (c === "Minus" || c === "NumpadSubtract") zoom(-1);
     else return;
     e.preventDefault();
   });
