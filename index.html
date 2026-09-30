@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>지뢰찾기 온라인 | MINE:D</title>
+<meta name="description" content="무료 온라인 지뢰찾기 MINE:D. 설치 없이 브라우저에서 바로 플레이하세요. 첫 클릭 안전, 초급부터 80×50 '신' 난이도까지 7단계, 힌트·통계·최고 기록 지원.">
+<link rel="canonical" href="https://playmined.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="MINE:D">
+<meta property="og:title" content="지뢰찾기 온라인 | MINE:D">
+<meta property="og:description" content="설치 없이 바로 하는 무료 지뢰찾기. 초급부터 '신' 난이도까지 7단계.">
+<meta property="og:url" content="https://playmined.com/">
+<meta property="og:image" content="https://playmined.com/icon-512.png">
+<meta property="og:locale" content="ko_KR">
+<meta name="theme-color" content="#141916">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"WebSite","name":"MINE:D","alternateName":["MINED","마인디","MINE:D 지뢰찾기"],"url":"https://playmined.com/","inLanguage":"ko"},
+ {"@type":"VideoGame","name":"지뢰찾기 온라인 | MINE:D","url":"https://playmined.com/","genre":"Puzzle","gamePlatform":"Web browser","applicationCategory":"Game","operatingSystem":"Any","inLanguage":["ko","en","ja","zh"],"offers":{"@type":"Offer","price":"0","priceCurrency":"KRW"}}
+]}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&family=JetBrains+Mono:wght@700;800&display=swap">
+<style>
+  /* Layout: the minefield sits dead-center of the page; a faint vertical menu floats on the left and wakes on hover. */
+  :root {
+    --ground: #e9ece6; --grid: #dde2d8; --ink: #1e2521; --muted: #5d6a61;
+    --tile: #c9d2c4; --tile-hi: #dfe6da; --tile-lo: #9fab99;
+    --open: #f6f7f3; --open-line: #d9ded5;
+    --accent: #c2410c; --boom: #b91c1c; --hint: #0e9f6e;
+    --n1: #1d4ed8; --n2: #15803d; --n3: #c2410c; --n4: #6d28d9;
+    --n5: #9f1239; --n6: #0f766e; --n7: #1e2521; --n8: #57534e;
+    --panel: #f6f7f3; --scrim: rgb(20 26 22 / 0.35);
+    --font-ui: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Hiragino Sans", "PingFang SC", system-ui, sans-serif;
+    --font-num: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --menu-w: 172px;
+    --cell: 28px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #141916; --grid: #1a201c; --ink: #e4e9e3; --muted: #93a096;
+      --tile: #3b4a40; --tile-hi: #4d5e52; --tile-lo: #26302a;
+      --open: #1f2622; --open-line: #2b342e;
+      --accent: #fb923c; --boom: #ef4444; --hint: #34d399;
+      --n1: #7aa7ff; --n2: #5ed48a; --n3: #fb923c; --n4: #c4a1ff;
+      --n5: #fb7185; --n6: #5eead4; --n7: #e4e9e3; --n8: #a8a29e;
+      --panel: #1a201c; --scrim: rgb(0 0 0 / 0.55);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #141916; --grid: #1a201c; --ink: #e4e9e3; --muted: #93a096;
+    --tile: #3b4a40; --tile-hi: #4d5e52; --tile-lo: #26302a;
+    --open: #1f2622; --open-line: #2b342e;
+    --accent: #fb923c; --boom: #ef4444; --hint: #34d399;
+    --n1: #7aa7ff; --n2: #5ed48a; --n3: #fb923c; --n4: #c4a1ff;
+    --n5: #fb7185; --n6: #5eead4; --n7: #e4e9e3; --n8: #a8a29e;
+    --panel: #1a201c; --scrim: rgb(0 0 0 / 0.55);
+    color-scheme: dark;
+  }
+
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background-color: var(--ground); color: var(--ink); font-family: var(--font-ui);
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* ---------- menu ---------- */
+  .menu {
+    position: fixed; z-index: 5; left: 0; top: 0; bottom: 0; width: var(--menu-w);
+    padding: calc(18px + env(safe-area-inset-top, 0px)) 12px 18px 16px;
+    display: flex; flex-direction: column; gap: 16px; overflow-y: auto;
+    opacity: 0.32; transition: opacity 0.2s ease; font-size: 13px;
+  }
+  .menu:hover, .menu:focus-within { opacity: 1; }
+  .brand { margin: 0; font: 800 17px var(--font-num); letter-spacing: 0.02em; }
+  .brand span { color: var(--accent); }
+  .about { max-width: 680px; margin: 0 auto; padding: 24px calc(var(--menu-w) + 12px) 64px; box-sizing: content-box; color: var(--muted); font-size: 14px; line-height: 1.7; }
+  .about h1 { font-size: 20px; color: var(--ink); margin: 0 0 8px; }
+  .about h2 { font-size: 15px; color: var(--ink); margin: 22px 0 6px; }
+  .about p, .about ul { margin: 0 0 8px; }
+  .about table { border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .about td, .about th { padding: 4px 12px 4px 0; text-align: left; }
+  .about footer { margin-top: 28px; font-size: 12px; }
+  @media (max-width: 700px) { .about { padding: 24px 16px 48px; } }
+  .group { display: grid; gap: 2px; }
+  .group > span { font-size: 10.5px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+  .mi {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 8px; width: 100%;
+    font: 500 13px var(--font-ui); color: var(--ink); background: none; border: 0; border-radius: 6px;
+    padding: 5px 8px; text-align: left; cursor: pointer;
+  }
+  .mi:hover { background: var(--panel); }
+  .mi:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .mi kbd, .mi small { font: 700 10.5px var(--font-num); color: var(--muted); }
+  .mi[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
+  .mi[aria-pressed="true"] small { color: var(--ground); opacity: 0.7; }
+  .zoom { display: flex; align-items: center; gap: 4px; padding: 0 8px; }
+  .zoom button { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--open-line); background: var(--panel);
+                 color: var(--ink); font: 700 14px var(--font-num); cursor: pointer; padding: 0; }
+  .zoom output { flex: 1; text-align: center; font: 700 12px var(--font-num); color: var(--muted); }
+  .zoom .fit { width: auto; padding: 0 7px; font: 600 11px var(--font-ui); }
+  .langs { display: grid; grid-template-columns: repeat(2, max-content); justify-content: start; gap: 3px; padding: 0 4px; }
+  .langs button { font: 500 12px var(--font-ui); background: none; border: 1px solid transparent; color: var(--muted);
+                  border-radius: 5px; padding: 3px 6px; cursor: pointer; }
+  .langs button[aria-pressed="true"] { color: var(--ink); border-color: var(--open-line); background: var(--panel); }
+  .custom { display: grid; gap: 6px; padding: 6px 8px 2px; }
+  .custom label { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .custom input { width: 64px; padding: 4px 6px; border: 1px solid var(--open-line); border-radius: 6px;
+                  background: var(--open); color: var(--ink); font: 700 12px var(--font-num); }
+  .custom .go { font: 600 12px var(--font-ui); background: var(--accent); color: #fff; border: 0; border-radius: 6px; padding: 6px; cursor: pointer; }
+  .custom .err { margin: 0; color: var(--boom); font-size: 11.5px; }
+
+  /* ---------- stage (board centered on the whole page) ---------- */
+  .stage {
+    position: relative; min-height: 100vh; overflow-x: auto; display: flex;
+    padding: calc(16px + env(safe-area-inset-top, 0px)) calc(var(--menu-w) + 12px) calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+  .play { margin: auto; display: grid; gap: 10px; justify-items: center; }
+  .hud {
+    display: grid; grid-template-columns: auto auto 1fr auto auto; column-gap: 8px; row-gap: 3px;
+    width: 100%; min-width: min(420px, 100%); font-size: 13.5px; font-variant-numeric: tabular-nums;
+  }
+  .hud dt { color: var(--muted); text-align: right; }
+  .hud dd { margin: 0; font-weight: 600; }
+  .hud .r { text-align: left; }
+  .hud dd.r { text-align: right; font-family: var(--font-num); font-weight: 700; }
+  .hud .gap { grid-column: 3; }
+  .status { min-height: 1.4em; margin: 0; text-align: center; font-weight: 600; font-size: 14px; }
+  .status.win { color: var(--n2); } .status.lose { color: var(--boom); } .status.info { color: var(--muted); }
+  .controls { margin: 0; font-size: 11.5px; color: var(--muted); opacity: 0.8; text-align: center; }
+
+  .board { display: grid; width: max-content; user-select: none; -webkit-user-select: none;
+           border: 2px solid var(--tile-lo); border-radius: 4px; background: var(--tile-lo);
+           box-shadow: 0 12px 34px rgb(0 0 0 / 0.12); }
+  .cell {
+    --bev: max(1px, calc(var(--cell) * 0.07));
+    width: var(--cell); height: var(--cell); padding: 0; margin: 0; border: 0;
+    display: grid; place-items: center; cursor: pointer;
+    font: 800 calc(var(--cell) * 0.58) var(--font-num); line-height: 1;
+    background: var(--tile); color: var(--ink);
+    box-shadow: inset var(--bev) var(--bev) 0 var(--tile-hi), inset calc(var(--bev) * -1) calc(var(--bev) * -1) 0 var(--tile-lo);
+  }
+  .cell:hover:not(.open) { filter: brightness(1.07); }
+  .cell:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; position: relative; z-index: 1; }
+  .cell.open { background: var(--open); box-shadow: inset 0 0 0 0.5px var(--open-line); cursor: default; }
+  .cell.open.num { cursor: pointer; }
+  .cell.flag::after { content: ""; width: 42%; height: 46%; background: var(--accent);
+                      clip-path: polygon(0 0, 100% 30%, 0 60%, 0 100%, 12% 100%, 12% 0); }
+  .cell.mine::after { content: ""; width: 48%; height: 48%; border-radius: 50%; background: var(--ink); }
+  .cell.boom { background: var(--boom); }
+  .cell.boom::after { background: #fff; }
+  .cell.wrong::after { content: "×"; width: auto; height: auto; background: none; clip-path: none; color: var(--boom); font-size: calc(var(--cell) * 0.72); }
+  .cell.hint { background: var(--hint); position: relative; z-index: 2; }
+  @media (prefers-reduced-motion: no-preference) {
+    .cell.hint { animation: pulse 0.5s ease-in-out 4 alternate; }
+    @keyframes pulse { from { filter: brightness(1); transform: scale(1); } to { filter: brightness(1.25); transform: scale(1.15); } }
+  }
+  .n1 { color: var(--n1); } .n2 { color: var(--n2); } .n3 { color: var(--n3); } .n4 { color: var(--n4); }
+  .n5 { color: var(--n5); } .n6 { color: var(--n6); } .n7 { color: var(--n7); } .n8 { color: var(--n8); }
+
+  /* ---------- stats dialog ---------- */
+  .scrim { position: fixed; inset: 0; z-index: 10; background: var(--scrim); display: grid; place-items: center; padding: 16px; }
+  .dialog { background: var(--panel); color: var(--ink); border: 1px solid var(--open-line); border-radius: 14px;
+            box-shadow: 0 20px 50px rgb(0 0 0 / 0.25); padding: 20px; width: min(560px, 100%); display: grid; gap: 14px; max-height: 90vh; overflow: auto; }
+  .dialog h2 { margin: 0; font-size: 17px; }
+  .tablewrap { overflow-x: auto; }
+  .dialog table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .dialog th, .dialog td { padding: 7px 8px; border-bottom: 1px solid var(--open-line); text-align: right; white-space: nowrap; }
+  .dialog th:first-child, .dialog td:first-child { text-align: left; }
+  .dialog th { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.04em; }
+  .dialog td b { font-family: var(--font-num); }
+  .row { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; align-items: center; }
+  .row p { margin: 0 auto 0 0; font-size: 13px; color: var(--boom); }
+  .btn { font: 600 13px var(--font-ui); border-radius: 8px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--open-line); background: var(--open); color: var(--ink); }
+  .btn.danger { color: var(--boom); }
+  .btn.solid { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+
+  /* phones: menu becomes a faint top strip, board below */
+  @media (max-width: 700px) {
+    :root { --menu-w: 0px; }
+    .menu { position: static; width: auto; flex-direction: row; flex-wrap: wrap; opacity: 0.6; padding: 12px 16px; gap: 10px 16px; }
+    .stage { position: static; padding: 8px 16px 24px; }
+  }
+</style>
+</head>
+<body>
+<nav class="menu" id="menu" aria-label="Menu">
+  <p class="brand">MINE<span>:</span>D</p>
+
+  <div class="group">
+    <span id="t-game">게임</span>
+    <button class="mi" type="button" id="newGame"><span id="t-new">새 게임</span><kbd>N</kbd></button>
+    <button class="mi" type="button" id="restart"><span id="t-restart">게임 재시작</span><kbd>R</kbd></button>
+  </div>
+
+  <div class="group" id="levels">
+    <span id="t-level">난이도</span>
+    <!-- level buttons are rendered by script -->
+  </div>
+  <form class="custom" id="custom" hidden>
+    <label for="cw"><span id="t-w">가로</span><input id="cw" type="number" min="5" max="100" value="40"></label>
+    <label for="ch"><span id="t-h">세로</span><input id="ch" type="number" min="5" max="60" value="25"></label>
+    <label for="cm"><span id="t-m">지뢰</span><input id="cm" type="number" min="1" value="200"></label>
+    <button class="go" type="submit" id="t-start">시작</button>
+    <p class="err" id="customErr" hidden></p>
+  </form>
+
+  <div class="group">
+    <span id="t-view">보기</span>
+    <div class="zoom">
+      <button type="button" id="zoomOut" aria-label="Zoom out">−</button>
+      <output id="zoomVal">100%</output>
+      <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
+      <button type="button" class="fit" id="zoomFit">맞춤</button>
+    </div>
+  </div>
+
+  <div class="group">
+    <span id="t-help">도움</span>
+    <button class="mi" type="button" id="hint"><span id="t-hint">힌트 요청</span><kbd>H</kbd></button>
+    <button class="mi" type="button" id="statsBtn"><span id="t-stats">통계</span><kbd>S</kbd></button>
+  </div>
+
+  <div class="group">
+    <span id="t-lang">언어</span>
+    <div class="langs" id="langs">
+      <button type="button" data-lang="ko">한국어</button>
+      <button type="button" data-lang="en">English</button>
+      <button type="button" data-lang="ja">日本語</button>
+      <button type="button" data-lang="zh">中文</button>
+    </div>
+  </div>
+
+</nav>
+
+<main class="stage" id="stage">
+  <div class="play">
+    <dl class="hud">
+      <dt id="t-diff">난이도:</dt><dd id="lvlLabel"></dd><span class="gap"></span><dt class="r" id="t-time">시간:</dt><dd class="r" id="time">00:00.0</dd>
+      <dt id="t-mode">모드:</dt><dd id="modeLabel"></dd><span class="gap"></span><dt class="r" id="t-minesLeft">남은 지뢰 수:</dt><dd class="r" id="minesLeft">0</dd>
+      <dt id="t-gameNo">게임 번호:</dt><dd id="gameNo"></dd><span class="gap"></span><dt class="r" id="t-cellsLeft">남은 칸 수:</dt><dd class="r" id="cellsLeft">0</dd>
+    </dl>
+    <div class="board" id="board" role="grid"></div>
+    <p class="status" id="status" aria-live="polite"></p>
+    <p class="controls" id="t-controls"></p>
+  </div>
+</main>
+
+<article class="about" lang="ko">
+  <h1>지뢰찾기 온라인</h1>
+  <p>MINE:D는 설치 없이 브라우저에서 바로 하는 무료 지뢰찾기 게임입니다. 첫 클릭은 항상 안전하고, 초급부터 80×50 칸에 지뢰 1,100개가 숨은 '신' 난이도까지 7단계로 도전할 수 있습니다.</p>
+  <h2>하는 법</h2>
+  <ul>
+    <li>칸을 클릭해 엽니다. 숫자는 주변 8칸에 있는 지뢰 개수입니다.</li>
+    <li>지뢰라고 생각되는 칸에는 스페이스바나 오른쪽 클릭으로 깃발을 꽂습니다.</li>
+    <li>숫자만큼 깃발을 꽂았다면 그 숫자를 클릭하거나 스페이스바를 눌러 주변을 한 번에 엽니다.</li>
+    <li>지뢰가 없는 칸을 모두 열면 승리합니다. 막히면 힌트(H)로 안전한 칸을 확인할 수 있습니다.</li>
+  </ul>
+  <h2>난이도</h2>
+  <table>
+    <tr><th>난이도</th><th>판</th><th>지뢰</th></tr>
+    <tr><td>초급</td><td>9×9</td><td>10</td></tr>
+    <tr><td>중급</td><td>16×16</td><td>40</td></tr>
+    <tr><td>고급</td><td>30×16</td><td>99</td></tr>
+    <tr><td>낫휴먼</td><td>40×25</td><td>220</td></tr>
+    <tr><td>슈퍼맨</td><td>50×32</td><td>380</td></tr>
+    <tr><td>에일리언</td><td>64×40</td><td>660</td></tr>
+    <tr><td>신</td><td>80×50</td><td>1,100</td></tr>
+  </table>
+  <h2>단축키</h2>
+  <p>N 새 게임 · R 같은 판 재시작 · H 힌트 · S 통계 · +/− 확대·축소</p>
+  <footer>© MINE:D · 기록과 통계는 이 브라우저에만 저장됩니다.</footer>
+</article>
+
+<div class="scrim" id="statsDlg" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="t-statsTitle">
+    <h2 id="t-statsTitle">통계</h2>
+    <div class="tablewrap"><table id="statsTable"></table></div>
+    <div class="row">
+      <p id="resetAsk" hidden></p>
+      <button class="btn danger" type="button" id="statsReset">초기화</button>
+      <button class="btn solid" type="button" id="statsReset2" hidden>초기화</button>
+      <button class="btn" type="button" id="statsClose">닫기</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+
+  // ---------- levels ----------
+  const LEVELS = {
+    beginner:     { w: 9,  h: 9,  m: 10 },
+    intermediate: { w: 16, h: 16, m: 40 },
+    expert:       { w: 30, h: 16, m: 99 },
+    nothuman:     { w: 40, h: 25, m: 220 },
+    superman:     { w: 50, h: 32, m: 380 },
+    alien:        { w: 64, h: 40, m: 660 },
+    god:          { w: 80, h: 50, m: 1100 },
+  };
+
+  // ---------- text ----------
+  const T = {
+    ko: {
+      title: "지뢰찾기", game: "게임", new: "새 게임", restart: "게임 재시작", level: "난이도", view: "보기", fit: "맞춤",
+      help: "도움", hint: "힌트 요청", stats: "통계", lang: "언어", time: "시간", best: "최고",
+      diff: "난이도", mode: "모드", modeVal: "첫 시도 보장", gameNo: "게임 번호", minesLeft: "남은 지뢰 수", cellsLeft: "남은 칸 수",
+      w: "가로", h: "세로", m: "지뢰", start: "시작",
+      lv: { beginner: "초급", intermediate: "중급", expert: "고급", nothuman: "낫휴먼", superman: "슈퍼맨", alien: "에일리언", god: "신", custom: "사용자 지정" },
+      controls: "클릭: 열기 · 닫힌 칸에 스페이스바(오른쪽 클릭): 깃발 · 열린 숫자에 스페이스바(클릭): 주변 열기",
+      lose: "지뢰를 밟았어요. R로 같은 판을 다시 하거나 N으로 새 게임을 시작하세요.",
+      win: t => `클리어! ${t}`, winRecord: t => `클리어! ${t}, 새 최고 기록이에요.`, winHinted: t => `클리어! ${t} (힌트를 써서 기록에는 남지 않아요)`,
+      firstSafe: "첫 칸은 어디를 눌러도 안전해요.", hintShown: "초록색으로 반짝인 칸은 안전해요.", noHint: "열 수 있는 안전한 칸이 없어요.",
+      restartNone: "아직 시작하지 않은 판이에요.", restarted: "같은 판을 처음부터 다시 해요.",
+      errW: "가로는 5~100 사이로 입력하세요.", errH: "세로는 5~60 사이로 입력하세요.", errM: n => `지뢰는 1~${n}개 사이로 입력하세요.`,
+      statsTitle: "통계", cols: ["난이도", "플레이", "승리", "승률", "최고 기록", "총 플레이 시간"], close: "닫기", reset: "초기화",
+      fb: "피드백", fbPh: "개선할 점이나 버그를 적어 주세요", fbSend: "보내기", fbSending: "보내는 중…", fbSent: "보냈어요. 고마워요!", fbEmpty: "내용을 입력해 주세요.", fbDenied: "이 보기 권한으로는 피드백을 보낼 수 없어요.", fbOff: "claude.ai에서 열었을 때만 피드백을 보낼 수 있어요.", fbFail: "보내지 못했어요. 잠시 후 다시 시도해 주세요.", fbFull: "피드백 저장 공간이 가득 찼어요.", fbInbox: "받은 피드백", fbNone: "아직 받은 피드백이 없어요.", someone: "누군가", 
+      resetAsk: "모든 통계를 지울까요?", resetYes: "지우기", sec: s => `${s}초`,
+    },
+    en: {
+      title: "Minesweeper", game: "Game", new: "New game", restart: "Restart", level: "Difficulty", view: "View", fit: "Fit",
+      help: "Help", hint: "Get a hint", stats: "Statistics", lang: "Language", time: "Time", best: "Best",
+      diff: "Difficulty", mode: "Mode", modeVal: "Safe first click", gameNo: "Game no.", minesLeft: "Mines left", cellsLeft: "Cells left",
+      w: "Width", h: "Height", m: "Mines", start: "Start",
+      lv: { beginner: "Beginner", intermediate: "Intermediate", expert: "Expert", nothuman: "Not Human", superman: "Superman", alien: "Alien", god: "God", custom: "Custom" },
+      controls: "Click: open · Space (right-click) on a closed cell: flag · Space (click) on a number: open around it",
+      lose: "You hit a mine. Press R to replay this board or N for a new game.",
+      win: t => `Cleared in ${t}!`, winRecord: t => `Cleared in ${t}! New best time.`, winHinted: t => `Cleared in ${t}! (Hints used, so it isn't recorded.)`,
+      firstSafe: "Your first click is always safe.", hintShown: "The cell flashing green is safe.", noHint: "There are no safe cells left to open.",
+      restartNone: "This board hasn't started yet.", restarted: "Replaying the same board from the start.",
+      errW: "Width must be 5–100.", errH: "Height must be 5–60.", errM: n => `Mines must be 1–${n}.`,
+      statsTitle: "Statistics", cols: ["Difficulty", "Played", "Won", "Win rate", "Best time", "Total play time"], close: "Close", reset: "Reset",
+      fb: "Feedback", fbPh: "Ideas or bugs you noticed", fbSend: "Send", fbSending: "Sending…", fbSent: "Sent. Thank you!", fbEmpty: "Type something first.", fbDenied: "Your access level can’t send feedback here.", fbOff: "Feedback works when this page is opened on claude.ai.", fbFail: "Couldn’t send. Try again in a moment.", fbFull: "Feedback storage is full.", fbInbox: "Feedback received", fbNone: "No feedback yet.", someone: "Someone", 
+      resetAsk: "Clear all statistics?", resetYes: "Clear", sec: s => `${s}s`,
+    },
+    ja: {
+      title: "マインスイーパー", game: "ゲーム", new: "新しいゲーム", restart: "リスタート", level: "難易度", view: "表示", fit: "全体",
+      help: "ヘルプ", hint: "ヒント", stats: "統計", lang: "言語", time: "時間", best: "ベスト",
+      diff: "難易度", mode: "モード", modeVal: "初手保証", gameNo: "ゲーム番号", minesLeft: "残り地雷数", cellsLeft: "残りマス数",
+      w: "幅", h: "高さ", m: "地雷", start: "開始",
+      lv: { beginner: "初級", intermediate: "中級", expert: "上級", nothuman: "ノットヒューマン", superman: "スーパーマン", alien: "エイリアン", god: "神", custom: "カスタム" },
+      controls: "クリック: 開く · 閉じたマスでスペース(右クリック): 旗 · 開いた数字でスペース(クリック): 周囲を開く",
+      lose: "地雷を踏みました。Rで同じ盤面をもう一度、Nで新しいゲームを始めます。",
+      win: t => `クリア! ${t}`, winRecord: t => `クリア! ${t}、自己ベスト更新です。`, winHinted: t => `クリア! ${t}(ヒント使用のため記録されません)`,
+      firstSafe: "最初のクリックはどこでも安全です。", hintShown: "緑に光ったマスは安全です。", noHint: "開けられる安全なマスがありません。",
+      restartNone: "まだ始まっていない盤面です。", restarted: "同じ盤面を最初からやり直します。",
+      errW: "幅は5〜100で入力してください。", errH: "高さは5〜60で入力してください。", errM: n => `地雷は1〜${n}個で入力してください。`,
+      statsTitle: "統計", cols: ["難易度", "プレイ", "勝利", "勝率", "ベスト", "総プレイ時間"], close: "閉じる", reset: "リセット",
+      fb: "フィードバック", fbPh: "改善点やバグを書いてください", fbSend: "送信", fbSending: "送信中…", fbSent: "送信しました。ありがとうございます!", fbEmpty: "内容を入力してください。", fbDenied: "現在の権限ではフィードバックを送れません。", fbOff: "claude.ai で開いたときだけ送信できます。", fbFail: "送信できませんでした。少し後でもう一度お試しください。", fbFull: "フィードバックの保存容量がいっぱいです。", fbInbox: "受け取ったフィードバック", fbNone: "まだフィードバックはありません。", someone: "だれか", 
+      resetAsk: "すべての統計を消去しますか?", resetYes: "消去", sec: s => `${s}秒`,
+    },
+    zh: {
+      title: "扫雷", game: "游戏", new: "新游戏", restart: "重新开始", level: "难度", view: "视图", fit: "适应",
+      help: "帮助", hint: "提示", stats: "统计", lang: "语言", time: "时间", best: "最佳",
+      diff: "难度", mode: "模式", modeVal: "首次点击安全", gameNo: "游戏编号", minesLeft: "剩余地雷", cellsLeft: "剩余格数",
+      w: "宽", h: "高", m: "地雷", start: "开始",
+      lv: { beginner: "初级", intermediate: "中级", expert: "高级", nothuman: "非人类", superman: "超人", alien: "外星人", god: "神", custom: "自定义" },
+      controls: "点击: 打开 · 未开格按空格(右键): 插旗 · 数字格按空格(点击): 打开周围",
+      lose: "踩到地雷了。按 R 重玩同一局,按 N 开始新游戏。",
+      win: t => `通关! ${t}`, winRecord: t => `通关! ${t},新纪录!`, winHinted: t => `通关! ${t}(使用了提示,不计入纪录)`,
+      firstSafe: "第一次点击总是安全的。", hintShown: "闪绿光的格子是安全的。", noHint: "没有可以打开的安全格子了。",
+      restartNone: "这一局还没有开始。", restarted: "从头重玩同一局。",
+      errW: "宽度请输入 5–100。", errH: "高度请输入 5–60。", errM: n => `地雷数请输入 1–${n}。`,
+      statsTitle: "统计", cols: ["难度", "局数", "胜利", "胜率", "最佳", "总游戏时间"], close: "关闭", reset: "重置",
+      fb: "反馈", fbPh: "写下改进建议或发现的问题", fbSend: "发送", fbSending: "发送中…", fbSent: "已发送,谢谢!", fbEmpty: "请先输入内容。", fbDenied: "你当前的权限无法发送反馈。", fbOff: "在 claude.ai 中打开时才能发送反馈。", fbFail: "发送失败,请稍后再试。", fbFull: "反馈存储空间已满。", fbInbox: "收到的反馈", fbNone: "还没有反馈。", someone: "某人", 
+      resetAsk: "清除所有统计吗?", resetYes: "清除", sec: s => `${s}秒`,
+    },
+  };
+
+  // ---------- storage (this browser only) ----------
+  const read = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch { return d; } };
+  const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+  const STATS = "minesweeper-stats-v2";
+  let stats = read(STATS, null);
+  if (!stats) {  // carry over best times from the earlier version for levels whose size didn't change
+    stats = {};
+    const old = read("minesweeper-best-v1", {});
+    for (const k of ["beginner", "intermediate", "expert"]) if (old[k] != null) stats[k] = { played: 0, won: 0, best: old[k] };
+    write(STATS, stats);
+  }
+  let lang = read("minesweeper-lang", null) || "ko";
+  if (!T[lang]) lang = "ko";
+  const L = () => T[lang];
+
+  // ---------- state ----------
+  let cfg = { key: "beginner", ...LEVELS.beginner };
+  let mines, open, flags, counts, cells = [];
+  let started = false, over = false, openedCount = 0, flagCount = 0, hintUsed = false, savedMines = null;
+  let gameNo = 0, lastBank = 0;
+  let t0 = 0, timer = null, elapsed = 0;
+  let cellPx = 28, statusKey = null, statusArg = null, statusCls = "";
+
+  const statKey = () => cfg.key === "custom" ? `custom-${cfg.w}x${cfg.h}-${cfg.m}` : cfg.key;
+  const levelName = () => cfg.key === "custom" ? `${L().lv.custom} ${cfg.w}×${cfg.h}·${cfg.m}` : L().lv[cfg.key];
+  const fmt = s => L().sec(s.toFixed(1));
+  // 00:00.0 — minutes, seconds, tenths
+  const clock = s => {
+    const tenths = Math.floor(s * 10), m = Math.floor(tenths / 600), r = tenths % 600;
+    return `${String(m).padStart(2, "0")}:${String(Math.floor(r / 10)).padStart(2, "0")}.${r % 10}`;
+  };
+  // Seeded RNG so a game number always describes the same layout for the same first click.
+  function rng(seed) {
+    return () => {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function paintCounts() {
+    $("minesLeft").textContent = (cfg.m - flagCount).toLocaleString();
+    $("cellsLeft").textContent = (cfg.w * cfg.h - cfg.m - openedCount).toLocaleString();
+  }
+
+  // ---------- board helpers ----------
+  const idx = (x, y) => y * cfg.w + x;
+  function neighbors(i) {
+    const x = i % cfg.w, y = (i / cfg.w) | 0, out = [];
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (!dx && !dy) continue;
+      const nx = x + dx, ny = y + dy;
+      if (nx >= 0 && ny >= 0 && nx < cfg.w && ny < cfg.h) out.push(idx(nx, ny));
+    }
+    return out;
+  }
+
+  function setStatus(key, arg, cls) { statusKey = key; statusArg = arg; statusCls = cls || ""; paintStatus(); }
+  function paintStatus() {
+    const v = statusKey ? L()[statusKey] : "";
+    $("status").textContent = typeof v === "function" ? v(statusArg) : v;
+    $("status").className = "status " + statusCls;
+  }
+
+  function buildBoard() {
+    if (started && !over) bankTime();
+    const n = cfg.w * cfg.h;
+    open = new Uint8Array(n); flags = new Uint8Array(n);
+    started = false; over = false; openedCount = 0; flagCount = 0; hintUsed = false; elapsed = 0;
+    clearInterval(timer); timer = null;
+    $("time").textContent = clock(0);
+    const board = $("board");
+    board.style.gridTemplateColumns = `repeat(${cfg.w}, var(--cell))`;
+    const frag = document.createDocumentFragment();
+    cells = new Array(n);
+    for (let i = 0; i < n; i++) {
+      const c = document.createElement("button");
+      c.type = "button"; c.className = "cell"; c.dataset.i = i; c.tabIndex = -1;
+      frag.appendChild(c); cells[i] = c;
+    }
+    board.replaceChildren(frag);
+    if (cells[0]) cells[0].tabIndex = 0;
+    paintHud();
+  }
+
+  function newGame() {
+    const n = cfg.w * cfg.h;
+    mines = new Uint8Array(n); counts = new Uint8Array(n); savedMines = null;
+    gameNo = 100000 + Math.floor(Math.random() * 900000);
+    buildBoard();
+    setStatus(null);
+  }
+
+  // Same mine layout, fresh board. Before the first click there is no layout yet.
+  function restart() {
+    if (!savedMines) { setStatus("restartNone", null, "info"); return; }
+    mines = savedMines.slice();
+    buildBoard();
+    computeCounts();
+    started = false;
+    setStatus("restarted", null, "info");
+  }
+
+  function computeCounts() {
+    const n = cfg.w * cfg.h;
+    counts = new Uint8Array(n);
+    for (let i = 0; i < n; i++) if (!mines[i]) { let s = 0; for (const j of neighbors(i)) s += mines[j]; counts[i] = s; }
+  }
+
+  // First click keeps the clicked cell and its neighbors clear.
+  function placeMines(first) {
+    const n = cfg.w * cfg.h;
+    let safe = new Set([first, ...neighbors(first)]);
+    if (n - safe.size < cfg.m) safe = new Set([first]);
+    const pool = [];
+    for (let i = 0; i < n; i++) if (!safe.has(i)) pool.push(i);
+    const rand = rng(gameNo * 7919 + first);
+    for (let k = 0; k < cfg.m; k++) {
+      const j = k + Math.floor(rand() * (pool.length - k));
+      [pool[k], pool[j]] = [pool[j], pool[k]];
+      mines[pool[k]] = 1;
+    }
+    computeCounts();
+    savedMines = mines.slice();
+  }
+
+  function begin() {
+    started = true;
+    const s = stats[statKey()] || (stats[statKey()] = { played: 0, won: 0, best: null });
+    s.played++; write(STATS, stats);
+    t0 = performance.now(); lastBank = t0;
+    timer = setInterval(() => {
+      elapsed = (performance.now() - t0) / 1000;
+      $("time").textContent = clock(elapsed);
+    }, 100);
+    setStatus(null);
+  }
+
+  function reveal(i) {
+    const stack = [i];
+    while (stack.length) {
+      const k = stack.pop();
+      if (open[k] || flags[k]) continue;
+      open[k] = 1; openedCount++;
+      const c = cells[k];
+      c.classList.add("open");
+      if (counts[k]) { c.textContent = counts[k]; c.classList.add("num", "n" + counts[k]); }
+      else for (const j of neighbors(k)) if (!open[j] && !mines[j]) stack.push(j);
+    }
+    paintCounts();
+  }
+
+  function openCell(i) {
+    if (over || open[i] || flags[i]) return;
+    if (!started) { if (!savedMines) placeMines(i); begin(); }
+    if (mines[i]) return lose(i);
+    reveal(i);
+    checkWin();
+  }
+
+  function chord(i) {
+    if (over || !open[i] || !counts[i]) return;
+    const ns = neighbors(i);
+    if (ns.reduce((s, j) => s + flags[j], 0) !== counts[i]) return;
+    for (const j of ns) if (!open[j] && !flags[j]) {
+      if (mines[j]) return lose(j);
+      reveal(j);
+    }
+    checkWin();
+  }
+
+  function toggleFlag(i) {
+    if (over || open[i]) return;
+    flags[i] ^= 1;
+    flagCount += flags[i] ? 1 : -1;
+    cells[i].classList.toggle("flag", !!flags[i]);
+    paintCounts();
+  }
+
+  function stop() { if (started && !over) bankTime(); over = true; clearInterval(timer); if (started) elapsed = (performance.now() - t0) / 1000; }
+
+  // Add time played since the last bank to this level's total. Runs on game end, abandon, and page hide.
+  function bankTime() {
+    const now = performance.now();
+    const s = stats[statKey()];
+    if (s) { s.time = (s.time || 0) + (now - lastBank) / 1000; write(STATS, stats); }
+    lastBank = now;
+  }
+  const hms = sec => {
+    const t = Math.floor(sec || 0), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), x = t % 60;
+    return `${h}:${String(m).padStart(2, "0")}:${String(x).padStart(2, "0")}`;
+  };
+
+  function lose(i) {
+    stop();
+    for (let k = 0; k < mines.length; k++) {
+      if (mines[k] && !flags[k]) cells[k].classList.add("open", "mine");
+      if (!mines[k] && flags[k]) { cells[k].classList.remove("flag"); cells[k].classList.add("open", "wrong"); }
+    }
+    cells[i].classList.add("boom");
+    setStatus("lose", null, "lose");
+  }
+
+  function checkWin() {
+    if (openedCount !== cfg.w * cfg.h - cfg.m) return;
+    stop();
+    for (let k = 0; k < mines.length; k++) if (mines[k] && !flags[k]) { flags[k] = 1; flagCount++; cells[k].classList.add("flag"); }
+    paintCounts();
+    const t = Math.round(elapsed * 10) / 10;
+    $("time").textContent = clock(t);
+    const s = stats[statKey()] || (stats[statKey()] = { played: 1, won: 0, best: null });
+    s.won++;
+    let key = "win";
+    if (hintUsed) key = "winHinted";
+    else if (s.best == null || t < s.best) { s.best = t; key = "winRecord"; }
+    write(STATS, stats);
+    setStatus(key, fmt(t), "win");
+    paintHud();
+  }
+
+  // Hint: flash one safe unopened cell, preferring cells next to what's already open.
+  function hint() {
+    if (over) return;
+    if (!started && !savedMines) { setStatus("firstSafe", null, "info"); return; }
+    const frontier = [], any = [];
+    for (let i = 0; i < cells.length; i++) {
+      if (open[i] || mines[i] || flags[i]) continue;
+      any.push(i);
+      if (started && neighbors(i).some(j => open[j])) frontier.push(i);
+    }
+    const pool = frontier.length ? frontier : any;
+    if (!pool.length) { setStatus("noHint", null, "info"); return; }
+    const i = pool[Math.floor(Math.random() * pool.length)];
+    hintUsed = true;
+    const c = cells[i];
+    c.classList.remove("hint"); void c.offsetWidth; c.classList.add("hint");
+    setTimeout(() => c.classList.remove("hint"), 2200);
+    c.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+    setStatus("hintShown", null, "info");
+  }
+
+  // ---------- zoom ----------
+  const ZOOMS = [12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40];
+  function setCell(px) {
+    cellPx = px;
+    $("board").style.setProperty("--cell", px + "px");
+    $("zoomVal").textContent = Math.round(px / 28 * 100) + "%";
+  }
+  function fitZoom() {
+    const menuW = window.innerWidth > 700 ? 172 : 0;
+    const availW = window.innerWidth - 2 * (menuW + 12) - 8;
+    const availH = window.innerHeight - 130;
+    const fit = Math.min(availW / cfg.w, availH / cfg.h);
+    let px = ZOOMS[0];
+    for (const z of ZOOMS) if (z <= Math.min(fit, 32)) px = z;
+    setCell(px);
+  }
+  // Beginner and intermediate always start at 114% (32px cells); bigger boards start fitted to the window.
+  const FIXED_START = { beginner: 32, intermediate: 32 };
+  function startZoom() { FIXED_START[cfg.key] ? setCell(FIXED_START[cfg.key]) : fitZoom(); }
+  function zoom(dir) {
+    let k = ZOOMS.findIndex(z => z >= cellPx);
+    if (k < 0) k = ZOOMS.length - 1;
+    if (ZOOMS[k] !== cellPx && dir < 0) k++;  // between steps: round toward the requested direction
+    setCell(ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, k + dir))]);
+  }
+
+  // ---------- menu / text ----------
+  function renderLevels() {
+    const box = $("levels");
+    box.querySelectorAll(".mi").forEach(b => b.remove());
+    for (const key of [...Object.keys(LEVELS), "custom"]) {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "mi"; b.dataset.level = key;
+      const l = LEVELS[key];
+      b.innerHTML = `<span></span>${l ? `<small>${l.w}×${l.h}</small>` : ""}`;
+      b.firstChild.textContent = L().lv[key];
+      b.addEventListener("click", () => chooseLevel(key));
+      box.appendChild(b);
+    }
+    markLevel();
+  }
+  function markLevel() {
+    const showing = $("custom").hidden ? cfg.key : "custom";
+    $("levels").querySelectorAll(".mi").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.level === showing)));
+  }
+  function chooseLevel(key) {
+    if (key === "custom") { $("custom").hidden = false; markLevel(); $("cw").focus(); return; }
+    $("custom").hidden = true;
+    if (started && !over) { bankTime(); started = false; }
+    cfg = { key, ...LEVELS[key] };
+    newGame(); startZoom(); markLevel();
+  }
+
+  function paintHud() {
+    $("lvlLabel").textContent = levelName();
+    $("modeLabel").textContent = L().modeVal;
+    $("gameNo").textContent = gameNo;
+    paintCounts();
+  }
+
+  function applyLang() {
+    const t = L();
+    document.documentElement.lang = lang;
+    document.title = t.title === "지뢰찾기" ? "지뢰찾기 온라인 | MINE:D" : `${t.title} Online | MINE:D`;
+    const map = { "t-game": t.game, "t-new": t.new, "t-restart": t.restart, "t-level": t.level,
+      "t-view": t.view, "zoomFit": t.fit, "t-help": t.help, "t-hint": t.hint, "t-stats": t.stats, "t-lang": t.lang,
+      "t-time": t.time + ":", "t-diff": t.diff + ":", "t-mode": t.mode + ":", "t-gameNo": t.gameNo + ":",
+      "t-minesLeft": t.minesLeft + ":", "t-cellsLeft": t.cellsLeft + ":", "t-w": t.w, "t-h": t.h, "t-m": t.m, "t-start": t.start,
+      "t-controls": t.controls, "t-statsTitle": t.statsTitle, "statsClose": t.close, "statsReset": t.reset,
+      "statsReset2": t.resetYes, "resetAsk": t.resetAsk };
+    for (const [id, text] of Object.entries(map)) $(id).textContent = text;
+    $("langs").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+    renderLevels(); paintHud(); paintStatus();
+    if (!$("statsDlg").hidden) renderStats();
+  }
+
+  // ---------- stats dialog ----------
+  function renderStats() {
+    const t = L();
+    const rows = Object.keys(LEVELS).map(k => [t.lv[k], stats[k]]);
+    for (const [k, s] of Object.entries(stats)) if (k.startsWith("custom-")) rows.push([`${t.lv.custom} ${k.slice(7).replace("x", "×").replace("-", "·")}`, s]);
+    $("statsTable").innerHTML = `<thead><tr>${t.cols.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>` +
+      rows.map(([name, s]) => {
+        const p = s?.played || 0, w = s?.won || 0;
+        return `<tr><td></td><td><b>${p}</b></td><td><b>${w}</b></td><td><b>${p ? Math.round(w / p * 100) + "%" : "—"}</b></td><td><b>${s?.best != null ? fmt(s.best) : "—"}</b></td><td><b>${hms(s?.time)}</b></td></tr>`;
+      }).join("") + "</tbody>";
+    $("statsTable").querySelectorAll("tbody tr").forEach((tr, i) => { tr.firstChild.textContent = rows[i][0]; });
+  }
+  function openStats() { $("resetAsk").hidden = true; $("statsReset2").hidden = true; $("statsReset").hidden = false; renderStats(); $("statsDlg").hidden = false; $("statsClose").focus(); }
+  function closeStats() { $("statsDlg").hidden = true; }
+
+  // ---------- input ----------
+  const board = $("board");
+  board.addEventListener("click", e => {
+    const c = e.target.closest(".cell"); if (!c) return;
+    const i = +c.dataset.i;
+    open[i] ? chord(i) : openCell(i);
+  });
+  board.addEventListener("contextmenu", e => {
+    const c = e.target.closest(".cell"); if (!c) return;
+    e.preventDefault();
+    toggleFlag(+c.dataset.i);
+  });
+
+  let hovered = null, spaceHandled = false;
+  board.addEventListener("mouseover", e => { hovered = e.target.closest(".cell"); });
+  board.addEventListener("mouseleave", () => { hovered = null; });
+
+  document.addEventListener("keydown", e => {
+    if (e.target.closest("input, form") || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.target.closest("textarea")) return;
+    if (!$("statsDlg").hidden) { if (e.key === "Escape") closeStats(); return; }
+    if (e.code === "Space") {
+      const c = (hovered?.isConnected && hovered) || document.activeElement?.closest?.(".cell");
+      if (!c) return;
+      e.preventDefault(); spaceHandled = true;
+      if (e.repeat) return;
+      const i = +c.dataset.i;
+      open[i] ? chord(i) : toggleFlag(i);
+      return;
+    }
+    const k = e.key.toLowerCase();
+    if (k === "n") newGame();
+    else if (k === "r") restart();
+    else if (k === "h") hint();
+    else if (k === "s") openStats();
+    else if (k === "+" || k === "=") zoom(1);
+    else if (k === "-" || k === "_") zoom(-1);
+    else return;
+    e.preventDefault();
+  });
+  document.addEventListener("keyup", e => { if (e.code === "Space" && spaceHandled) { e.preventDefault(); spaceHandled = false; } });
+
+  $("newGame").addEventListener("click", newGame);
+  $("restart").addEventListener("click", restart);
+  $("hint").addEventListener("click", hint);
+  $("statsBtn").addEventListener("click", openStats);
+  $("statsClose").addEventListener("click", closeStats);
+  $("statsDlg").addEventListener("click", e => { if (e.target === $("statsDlg")) closeStats(); });
+  $("statsReset").addEventListener("click", () => { $("resetAsk").hidden = false; $("statsReset2").hidden = false; $("statsReset").hidden = true; });
+  $("statsReset2").addEventListener("click", () => { stats = {}; write(STATS, stats); renderStats(); paintHud(); $("resetAsk").hidden = true; $("statsReset2").hidden = true; $("statsReset").hidden = false; });
+  $("zoomIn").addEventListener("click", () => zoom(1));
+  $("zoomOut").addEventListener("click", () => zoom(-1));
+  $("zoomFit").addEventListener("click", fitZoom);
+  $("langs").addEventListener("click", e => {
+    const b = e.target.closest("button[data-lang]"); if (!b) return;
+    lang = b.dataset.lang; write("minesweeper-lang", lang); applyLang();
+  });
+
+  $("custom").addEventListener("submit", e => {
+    e.preventDefault();
+    const w = Math.round(+$("cw").value), h = Math.round(+$("ch").value), m = Math.round(+$("cm").value);
+    const t = L();
+    let msg = "";
+    if (!(w >= 5 && w <= 100)) msg = t.errW;
+    else if (!(h >= 5 && h <= 60)) msg = t.errH;
+    else if (!(m >= 1 && m <= w * h - 1)) msg = t.errM(w * h - 1);
+    $("customErr").hidden = !msg; $("customErr").textContent = msg;
+    if (msg) return;
+    if (started && !over) { bankTime(); started = false; }
+    cfg = { key: "custom", w, h, m };
+    $("custom").hidden = true;
+    newGame(); fitZoom(); markLevel();
+  });
+
+  addEventListener("pagehide", () => { if (started && !over) bankTime(); });
+
+  // ---------- boot ----------
+  newGame();
+  applyLang();
+  startZoom();
+})();
+</script>
+
+</body>
+</html>
