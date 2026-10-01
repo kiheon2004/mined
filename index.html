@@ -272,7 +272,7 @@
   </div>
 </main>
 
-<article class="about" lang="ko">
+<article class="about" id="about" lang="ko">
   <h1>지뢰찾기 온라인</h1>
   <p>MINE:D는 설치 없이 브라우저에서 바로 하는 무료 지뢰찾기 게임입니다.<br>첫 클릭은 항상 안전하고, 초급부터 80×50 칸에 지뢰 1,100개가 숨은 '신' 난이도까지 7단계로 도전할 수 있습니다.</p>
   <h2>하는 법</h2>
@@ -662,6 +662,60 @@
     setCell(ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, k + dir))]);
   }
 
+
+  // ---------- guide below the board (Korean stays in the HTML for search; other languages swap in) ----------
+  const ABOUT = {
+    en: {
+      h1: "Minesweeper Online",
+      intro: "MINE:D is a free Minesweeper game you play right in your browser, no install needed.<br>Your first click is always safe, and there are 7 difficulty levels, from Beginner up to God: an 80×50 board hiding 1,100 mines.",
+      how: "How to play",
+      steps: ["Click a cell to open it. A number shows how many mines touch that cell's 8 neighbors.",
+              "Put a flag on a cell you think is a mine with the space bar or a right-click.",
+              "Once a number has that many flags around it, click the number or press space to open all its other neighbors at once.",
+              "Open every cell without a mine to win. Stuck? Press H for a hint that marks a safe cell."],
+      levels: "Difficulty levels", cols: ["Level", "Board", "Mines"],
+      keys: "Keyboard shortcuts", keyLine: "N new game · R replay this board · H hint · S statistics · +/− zoom",
+      foot: "© MINE:D · Records and statistics are saved only in this browser.",
+    },
+    ja: {
+      h1: "マインスイーパー オンライン",
+      intro: "MINE:D はインストール不要、ブラウザですぐ遊べる無料のマインスイーパーです。<br>最初のクリックは必ず安全。初級から、80×50 マスに地雷 1,100 個が潜む「神」まで 7 段階の難易度に挑戦できます。",
+      how: "遊び方",
+      steps: ["マスをクリックして開きます。数字は周囲 8 マスにある地雷の数です。",
+              "地雷だと思うマスには、スペースキーか右クリックで旗を立てます。",
+              "数字と同じ数の旗を立てたら、その数字をクリックするかスペースキーで周りを一度に開けます。",
+              "地雷のないマスをすべて開けば勝ちです。迷ったらヒント(H)で安全なマスを確認できます。"],
+      levels: "難易度", cols: ["難易度", "盤面", "地雷"],
+      keys: "ショートカット", keyLine: "N 新しいゲーム · R 同じ盤面をリスタート · H ヒント · S 統計 · +/− 拡大・縮小",
+      foot: "© MINE:D · 記録と統計はこのブラウザにのみ保存されます。",
+    },
+    zh: {
+      h1: "在线扫雷",
+      intro: "MINE:D 是一款无需安装、在浏览器中直接玩的免费扫雷游戏。<br>第一次点击永远安全,共有 7 个难度,从初级一直到在 80×50 格中藏着 1,100 颗地雷的「神」级。",
+      how: "玩法",
+      steps: ["点击格子将其打开。数字表示周围 8 格中地雷的数量。",
+              "在你认为是地雷的格子上按空格键或右键插旗。",
+              "当某个数字周围的旗子数与数字相同时,点击该数字或按空格键即可一次打开周围的其余格子。",
+              "打开所有没有地雷的格子即获胜。卡住时可按 H 获取提示,查看一个安全的格子。"],
+      levels: "难度", cols: ["难度", "棋盘", "地雷"],
+      keys: "快捷键", keyLine: "N 新游戏 · R 重玩同一局 · H 提示 · S 统计 · +/− 缩放",
+      foot: "© MINE:D · 记录和统计只保存在此浏览器中。",
+    },
+  };
+  const aboutKo = $("about").innerHTML;
+  function renderAbout() {
+    const box = $("about");
+    box.lang = lang;
+    const a = ABOUT[lang];
+    if (!a) { box.innerHTML = aboutKo; return; }
+    const rows = Object.entries(LEVELS).map(([k, l]) =>
+      `<tr><td>${L().lv[k]}</td><td>${l.w}×${l.h}</td><td>${l.m.toLocaleString("en-US")}</td></tr>`).join("");
+    box.innerHTML = `<h1>${a.h1}</h1><p>${a.intro}</p>
+      <h2>${a.how}</h2><ul>${a.steps.map(t => `<li>${t}</li>`).join("")}</ul>
+      <h2>${a.levels}</h2><table><tr>${a.cols.map(c => `<th>${c}</th>`).join("")}</tr>${rows}</table>
+      <h2>${a.keys}</h2><p>${a.keyLine}</p><footer>${a.foot}</footer>`;
+  }
+
   // ---------- menu / text ----------
   function renderLevels() {
     const box = $("levels");
@@ -708,7 +762,7 @@
       "statsReset2": t.resetYes, "resetAsk": t.resetAsk };
     for (const [id, text] of Object.entries(map)) $(id).textContent = text;
     $("langs").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
-    renderLevels(); paintHud(); paintStatus();
+    renderLevels(); paintHud(); paintStatus(); renderAbout();
     if (!$("statsDlg").hidden) renderStats();
   }
 
