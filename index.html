@@ -132,7 +132,7 @@
 
   /* ---------- stage (board centered on the whole page) ---------- */
   .stage {
-    position: relative; height: 100vh; overflow: auto; overscroll-behavior: contain; display: flex;
+    position: relative; height: 100vh; overflow: auto; overscroll-behavior-x: contain; overscroll-behavior-y: auto; display: flex;
     margin: 0 calc(var(--menu-w) + 12px);
     padding: calc(16px + env(safe-area-inset-top, 0px)) 0 calc(16px + env(safe-area-inset-bottom, 0px));
   }
