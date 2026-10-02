@@ -45,6 +45,7 @@
     --n1: #0f4a8a; --n2: #16603a; --n3: #8a3300; --n4: #4a2f86;
     --n5: #7a1f45; --n6: #0b5558; --n7: #1c1a17; --n8: #46423c;
     --num-scale: 0.64;
+    --menu-rest: #63615d; --menu-head: #53504d;
     --num-stroke: 0.045em;  /* dark-on-light digits look thinner; thicken them to match dark mode */
     --panel: #ece8e0; --scrim: rgb(30 28 24 / 0.35);
     --font-ui: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Hiragino Sans", "PingFang SC", system-ui, sans-serif;
@@ -62,6 +63,7 @@
       --n5: #ff8fb3; --n6: #5ce1e6; --n7: #e6edf3; --n8: #b0b8c0;
       --panel: #161a1e; --scrim: rgb(0 0 0 / 0.55);
       --num-scale: 0.58;
+      --menu-rest: #7a8084; --menu-head: #8e9398;
       --num-stroke: 0;
       color-scheme: dark;
     }
@@ -75,6 +77,7 @@
     --n5: #ff8fb3; --n6: #5ce1e6; --n7: #e6edf3; --n8: #b0b8c0;
     --panel: #161a1e; --scrim: rgb(0 0 0 / 0.55);
     --num-scale: 0.58;
+    --menu-rest: #7a8084; --menu-head: #8e9398;
     --num-stroke: 0;
     color-scheme: dark;
   }
@@ -90,11 +93,9 @@
   /* ---------- menu ---------- */
   .menu {
     position: fixed; z-index: 5; left: 0; top: 0; bottom: 0; width: var(--menu-w);
-    padding: calc(18px + env(safe-area-inset-top, 0px)) 12px 18px 16px;
-    display: flex; flex-direction: column; gap: 16px; overflow-y: auto;
-    opacity: 0.32; transition: opacity 0.2s ease; font-size: 13px;
+    padding: calc(14px + env(safe-area-inset-top, 0px)) 12px 14px 16px;
+    display: flex; flex-direction: column; gap: 6px; overflow-y: auto; font-size: 13px;
   }
-  .menu:hover, .menu:focus-within { opacity: 1; }
   .brand { margin: 0; font: 800 17px var(--font-num); letter-spacing: 0.02em; }
   .brand span { color: var(--accent); }
   .about { max-width: 680px; margin: 0 auto; padding: 24px calc(var(--menu-w) + 12px) 64px; box-sizing: content-box; color: var(--muted); font-size: 14px; line-height: 1.7; }
@@ -105,24 +106,25 @@
   .about td, .about th { padding: 4px 12px 4px 0; text-align: left; }
   .about footer { margin-top: 28px; font-size: 12px; }
   @media (max-width: 700px) { .about { padding: 24px 16px 48px; } }
-  .group { display: grid; gap: 2px; }
-  .group > span { font-size: 10.5px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+  .group { display: grid; gap: 1px; }
+  .group > span { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--menu-head); margin-bottom: 1px; }
   .mi {
     display: flex; justify-content: space-between; align-items: baseline; gap: 8px; width: 100%;
-    font: 500 13px var(--font-ui); color: var(--ink); background: none; border: 0; border-radius: 6px;
-    padding: 5px 8px; text-align: left; cursor: pointer;
+    font: 500 13px var(--font-ui); color: var(--menu-rest); background: none; border: 0; border-radius: 6px;
+    padding: 2px 8px; line-height: 1.3; text-align: left; cursor: pointer; transition: color 0.15s;
   }
   .mi:hover { background: var(--panel); }
   .mi:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   .mi kbd, .mi small { font: 700 10.5px var(--font-num); color: var(--muted); }
-  .mi[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
+  .menu:hover .mi, .menu:focus-within .mi { color: var(--ink); }
+  .menu .mi[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
   .mi[aria-pressed="true"] small { color: var(--ground); opacity: 0.7; }
   .zoom { display: flex; align-items: center; gap: 4px; padding: 0 8px; }
-  .zoom button { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--open-line); background: var(--panel);
+  .zoom button { width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--open-line); background: var(--panel);
                  color: var(--ink); font: 700 14px var(--font-num); cursor: pointer; padding: 0; }
   .zoom output { flex: 1; text-align: center; font: 700 12px var(--font-num); color: var(--muted); }
   .zoom .fit { width: auto; padding: 0 7px; font: 600 11px var(--font-ui); }
-  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 4px 4px 0; }
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px 4px 0; }
   .modes button { font: 500 12px var(--font-ui); background: none; border: 1px solid transparent; color: var(--muted);
                   border-radius: 5px; padding: 4px 6px; cursor: pointer; }
   .modes button[aria-pressed="true"] { color: var(--ink); border-color: var(--open-line); background: var(--panel); }
@@ -192,6 +194,12 @@
   .numform { display: flex; gap: 6px; padding: 4px 8px 2px; align-items: center; }
   .numform input { width: 86px; padding: 4px 6px; border: 1px solid var(--open-line); border-radius: 6px; background: var(--open); color: var(--ink); font: 700 12px var(--font-num); }
   .numform button { font: 600 12px var(--font-ui); background: var(--accent); color: var(--ground); border: 0; border-radius: 6px; padding: 5px 8px; cursor: pointer; }
+  .intro { position: fixed; z-index: 8; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+           width: min(540px, calc(100% - 32px)); display: flex; gap: 14px; align-items: center;
+           background: var(--panel); color: var(--ink); border: 1px solid var(--open-line); border-radius: 12px;
+           box-shadow: 0 12px 32px rgb(0 0 0 / 0.22); padding: 14px 16px; }
+  .intro p { margin: 0; font-size: 13.5px; line-height: 1.55; }
+  .intro .btn { flex: none; }
   .numerr { margin: 0; padding: 0 8px; color: var(--boom); font-size: 11.5px; }
   .editbar { display: grid; gap: 8px; justify-items: center; width: min(100%, 560px); }
   .editbar .row2 { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; }
@@ -242,13 +250,6 @@
     <span id="t-game">게임</span>
     <button class="mi" type="button" id="newGame"><span id="t-new">새 게임</span><kbd>N</kbd></button>
     <button class="mi" type="button" id="restart"><span id="t-restart">게임 재시작</span><kbd>R</kbd></button>
-    <button class="mi" type="button" id="byNumber"><span id="t-byNumber">번호로 시작</span></button>
-    <form class="numform" id="numForm" hidden>
-      <input id="numIn" type="number" min="1" max="999999" inputmode="numeric" aria-labelledby="t-byNumber">
-      <button type="submit" id="t-numGo">시작</button>
-    </form>
-    <p class="numerr" id="numErr" hidden></p>
-    <button class="mi" type="button" id="editorBtn"><span id="t-editor">판 편집기</span></button>
   </div>
 
   <div class="group" id="levels">
@@ -288,6 +289,17 @@
     <span id="t-help">도움</span>
     <button class="mi" type="button" id="hint"><span id="t-hint">힌트 요청</span><kbd>H</kbd></button>
     <button class="mi" type="button" id="statsBtn"><span id="t-stats">통계</span><kbd>S</kbd></button>
+  </div>
+
+  <div class="group">
+    <span id="t-tools">도구</span>
+    <button class="mi" type="button" id="byNumber"><span id="t-byNumber">번호로 시작</span></button>
+    <form class="numform" id="numForm" hidden>
+      <input id="numIn" type="number" min="1" max="999999" inputmode="numeric" aria-labelledby="t-byNumber">
+      <button type="submit" id="t-numGo">시작</button>
+    </form>
+    <p class="numerr" id="numErr" hidden></p>
+    <button class="mi" type="button" id="editorBtn"><span id="t-editor">판 편집기</span></button>
   </div>
 
   <div class="group">
@@ -339,6 +351,7 @@
     </div>
   </div>
 </main>
+<div class="intro" id="intro" role="note" hidden><p id="introText"></p><button class="btn solid" type="button" id="introOk"></button></div>
 
 <article class="about" id="about" lang="ja">
   <h1>マインスイーパー オンライン</h1>
@@ -385,7 +398,7 @@
   // ---------- text ----------
   const T = {
     ko: {
-      title: "지뢰찾기", modeLight: "밝은 모드", modeDark: "어두운 모드", game: "게임", new: "새 게임", restart: "게임 재시작", level: "난이도", view: "보기", fit: "맞춤",
+      title: "지뢰찾기", modeLight: "밝은 모드", modeDark: "어두운 모드", game: "게임", new: "새 게임", restart: "게임 재시작", level: "난이도", view: "보기", fit: "화면 맞춤",
       help: "도움", hint: "힌트 요청", stats: "통계", lang: "언어", time: "시간", best: "최고",
       diff: "난이도", mode: "모드", modeVal: "첫 시도 보장", gameNo: "게임 번호", minesLeft: "남은 지뢰 수", cellsLeft: "남은 칸 수",
       w: "가로", h: "세로", m: "지뢰", start: "시작",
@@ -394,7 +407,7 @@
       lose: "지뢰를 밟았어요. R로 같은 판을 다시 하거나 N으로 새 게임을 시작하세요.",
       win: t => `클리어! ${t}`, winRecord: t => `클리어! ${t}, 새 최고 기록이에요.`, winHinted: t => `클리어! ${t} (힌트를 써서 기록에는 남지 않아요)`,
       firstSafe: "첫 칸은 어디를 눌러도 안전해요.", hintShown: "초록색으로 반짝인 칸은 안전해요.", noHint: "열 수 있는 안전한 칸이 없어요.",
-      gmode: "게임 모드", gm: { random: "완전 랜덤", safe: "첫 시도 보장", noguess: "추측 불필요" }, generating: "추측 없이 풀리는 판을 만드는 중…", firstRandom: "완전 랜덤 모드라 첫 칸도 지뢰일 수 있어요.", hintSafe: "초록색으로 반짝인 칸은 숫자로 보아 확실히 안전해요.", hintMine: "빨갛게 반짝인 칸은 숫자로 보아 확실히 지뢰예요. 깃발을 꽂으세요.", hintWrongFlag: "반짝인 칸은 안전한데 깃발이 꽂혀 있어요. 깃발을 빼 보세요.", noLogic: "지금은 숫자만으로 확실한 칸이 없어요. 추측이 필요한 상황이에요.", byNumber: "번호로 시작", numErr: "1~999999 사이의 숫자를 입력하세요.", editor: "판 편집기", editHelp: "칸을 클릭하거나 스페이스바를 눌러 지뢰를 놓고 뺍니다. 판 크기는 난이도 메뉴에서 고르세요.", editCount: n => `지뢰 <b>${n}</b>개`, editClear: "비우기", editPlay: "이 판으로 플레이", editCopy: "공유 코드 복사", editCopyLink: "공유 링크 복사", editCopied: "복사했어요. 친구에게 보내 보세요!", editCopyFail: "복사하지 못했어요. 아래 칸의 내용을 직접 복사하세요.", editExit: "편집 끝내기", editLoad: "불러오기", editLoadPh: "공유 코드나 링크 붙여 넣기", editBad: "코드를 읽을 수 없어요. 다시 확인해 주세요.", editLoaded: "판을 불러왔어요.", editNeed: "지뢰를 1개 이상 놓고, 빈칸도 1칸 이상 남겨 주세요.", editedBoard: "편집한 판", edited: "편집한 판", sharedBoard: "공유받은 판이에요. 첫 클릭 보장이 없으니 조심하세요!", restartNone: "아직 시작하지 않은 판이에요.", restarted: "같은 판을 처음부터 다시 해요.",
+      gmode: "게임 모드", gm: { random: "완전 랜덤", safe: "첫 시도 보장", noguess: "추측 불필요" }, generating: "추측 없이 풀리는 판을 만드는 중…", firstRandom: "완전 랜덤 모드라 첫 칸도 지뢰일 수 있어요.", hintSafe: "초록색으로 반짝인 칸은 숫자로 보아 확실히 안전해요.", hintMine: "빨갛게 반짝인 칸은 숫자로 보아 확실히 지뢰예요. 깃발을 꽂으세요.", hintWrongFlag: "반짝인 칸은 안전한데 깃발이 꽂혀 있어요. 깃발을 빼 보세요.", noLogic: "지금은 숫자만으로 확실한 칸이 없어요. 추측이 필요한 상황이에요.", byNumber: "번호로 시작", numErr: "1~999999 사이의 숫자를 입력하세요.", editor: "판 편집기", editHelp: "칸을 클릭하거나 스페이스바를 눌러 지뢰를 놓고 뺍니다. 판 크기는 난이도 메뉴에서 고르세요.", editCount: n => `지뢰 <b>${n}</b>개`, editClear: "비우기", editPlay: "이 판으로 플레이", editCopy: "공유 코드 복사", editCopyLink: "공유 링크 복사", editCopied: "복사했어요. 친구에게 보내 보세요!", editCopyFail: "복사하지 못했어요. 아래 칸의 내용을 직접 복사하세요.", editExit: "편집 끝내기", editLoad: "불러오기", editLoadPh: "공유 코드나 링크 붙여 넣기", editBad: "코드를 읽을 수 없어요. 다시 확인해 주세요.", editLoaded: "판을 불러왔어요.", editNeed: "지뢰를 1개 이상 놓고, 빈칸도 1칸 이상 남겨 주세요.", editedBoard: "편집한 판", edited: "편집한 판", sharedBoard: "공유받은 판이에요. 첫 클릭 보장이 없으니 조심하세요!", tools: "도구", introText: "처음 오셨나요? 칸을 클릭하면 열리고, 스페이스바나 오른쪽 클릭으로 깃발을 꽂아요. 숫자 위에서 스페이스바를 누르면 주변이 한 번에 열려요. 난이도와 모드는 왼쪽 메뉴에서 고를 수 있어요.", introOk: "알겠어요", tip: { lv: { beginner: "처음이라면 여기서 시작하세요", intermediate: "익숙해졌다면 다음 단계", expert: "고전 지뢰찾기의 최고 난이도", nothuman: "여기서부터 고급보다 큰 판", superman: "더 넓은 판, 집중력이 필요해요", alien: "긴 승부를 각오하세요", god: "가장 큰 판", custom: "가로·세로·지뢰 수를 직접 정해요" }, gm: { random: "첫 클릭에서도 지뢰를 밟을 수 있는 고전 방식", safe: "첫 클릭한 칸과 주변 8칸에는 지뢰가 없어요", noguess: "숫자만으로 항상 끝까지 풀 수 있는 판만 나와요. 찍을 필요가 없어요" }, fit: "판을 화면 크기에 맞춰요", byNumber: "같은 번호로 친구와 같은 판을 할 수 있어요", editor: "지뢰를 직접 놓아 판을 만들고 링크로 공유해요", hint: "숫자로 확실히 알 수 있는 칸을 알려 줘요 (기록에는 안 남아요)", stats: "난이도별 플레이 수·승률·최고 기록" }, restartNone: "아직 시작하지 않은 판이에요.", restarted: "같은 판을 처음부터 다시 해요.",
       errW: "가로는 5~100 사이로 입력하세요.", errH: "세로는 5~60 사이로 입력하세요.", errM: n => `지뢰는 1~${n}개 사이로 입력하세요.`,
       statsTitle: "통계", cols: ["난이도", "플레이", "승리", "승률", "최고 기록", "총 플레이 시간"], close: "닫기", reset: "초기화",
       fb: "피드백", fbPh: "개선할 점이나 버그를 적어 주세요", fbSend: "보내기", fbSending: "보내는 중…", fbSent: "보냈어요. 고마워요!", fbEmpty: "내용을 입력해 주세요.", fbDenied: "이 보기 권한으로는 피드백을 보낼 수 없어요.", fbOff: "claude.ai에서 열었을 때만 피드백을 보낼 수 있어요.", fbFail: "보내지 못했어요. 잠시 후 다시 시도해 주세요.", fbFull: "피드백 저장 공간이 가득 찼어요.", fbInbox: "받은 피드백", fbNone: "아직 받은 피드백이 없어요.", someone: "누군가", 
@@ -410,7 +423,7 @@
       lose: "You hit a mine. Press R to replay this board or N for a new game.",
       win: t => `Cleared in ${t}!`, winRecord: t => `Cleared in ${t}! New best time.`, winHinted: t => `Cleared in ${t}! (Hints used, so it isn't recorded.)`,
       firstSafe: "Your first click is always safe.", hintShown: "The cell flashing green is safe.", noHint: "There are no safe cells left to open.",
-      gmode: "Game mode", gm: { random: "Pure random", safe: "Safe first click", noguess: "No guessing" }, generating: "Building a board you can solve without guessing…", firstRandom: "Pure random mode: even your first click can hit a mine.", hintSafe: "The cell flashing green is certainly safe from the numbers.", hintMine: "The cell flashing red is certainly a mine from the numbers. Flag it.", hintWrongFlag: "The flashing cell is safe, but it has a flag on it. Try removing the flag.", noLogic: "No cell is certain from the numbers right now. This spot needs a guess.", byNumber: "Start by number", numErr: "Enter a number from 1 to 999999.", editor: "Board editor", editHelp: "Click a cell or press space to add or remove a mine. Pick the board size from the difficulty menu.", editCount: n => `<b>${n}</b> mines`, editClear: "Clear", editPlay: "Play this board", editCopy: "Copy share code", editCopyLink: "Copy share link", editCopied: "Copied. Send it to a friend!", editCopyFail: "Couldn’t copy. Copy the text in the box below instead.", editExit: "Close editor", editLoad: "Load", editLoadPh: "Paste a share code or link", editBad: "That code can’t be read. Check it and try again.", editLoaded: "Board loaded.", editNeed: "Place at least one mine and leave at least one empty cell.", editedBoard: "Custom-built board", edited: "Built board", sharedBoard: "This is a shared board. There’s no safe first click, so be careful!", restartNone: "This board hasn't started yet.", restarted: "Replaying the same board from the start.",
+      gmode: "Game mode", gm: { random: "Pure random", safe: "Safe first click", noguess: "No guessing" }, generating: "Building a board you can solve without guessing…", firstRandom: "Pure random mode: even your first click can hit a mine.", hintSafe: "The cell flashing green is certainly safe from the numbers.", hintMine: "The cell flashing red is certainly a mine from the numbers. Flag it.", hintWrongFlag: "The flashing cell is safe, but it has a flag on it. Try removing the flag.", noLogic: "No cell is certain from the numbers right now. This spot needs a guess.", byNumber: "Start by number", numErr: "Enter a number from 1 to 999999.", editor: "Board editor", editHelp: "Click a cell or press space to add or remove a mine. Pick the board size from the difficulty menu.", editCount: n => `<b>${n}</b> mines`, editClear: "Clear", editPlay: "Play this board", editCopy: "Copy share code", editCopyLink: "Copy share link", editCopied: "Copied. Send it to a friend!", editCopyFail: "Couldn’t copy. Copy the text in the box below instead.", editExit: "Close editor", editLoad: "Load", editLoadPh: "Paste a share code or link", editBad: "That code can’t be read. Check it and try again.", editLoaded: "Board loaded.", editNeed: "Place at least one mine and leave at least one empty cell.", editedBoard: "Custom-built board", edited: "Built board", sharedBoard: "This is a shared board. There’s no safe first click, so be careful!", tools: "Tools", introText: "New here? Click a cell to open it, and press space or right-click to flag a mine. Press space on a number to open everything around it. Pick a level and mode from the menu on the left.", introOk: "Got it", tip: { lv: { beginner: "Start here if you’re new", intermediate: "The next step once you’re comfortable", expert: "The hardest classic level", nothuman: "Bigger than Expert from here on", superman: "A wider board that needs focus", alien: "Settle in for a long game", god: "The biggest board", custom: "Set your own width, height and mines" }, gm: { random: "Classic: even your first click can hit a mine", safe: "No mines in your first cell or the 8 around it", noguess: "Every board can be solved from the numbers alone. No guessing needed" }, fit: "Fit the board to the window", byNumber: "Play the same board as a friend by using the same number", editor: "Place mines yourself and share the board by link", hint: "Shows a cell the numbers prove (that game won’t count as a record)", stats: "Games, win rate and best times by level" }, restartNone: "This board hasn't started yet.", restarted: "Replaying the same board from the start.",
       errW: "Width must be 5–100.", errH: "Height must be 5–60.", errM: n => `Mines must be 1–${n}.`,
       statsTitle: "Statistics", cols: ["Difficulty", "Played", "Won", "Win rate", "Best time", "Total play time"], close: "Close", reset: "Reset",
       fb: "Feedback", fbPh: "Ideas or bugs you noticed", fbSend: "Send", fbSending: "Sending…", fbSent: "Sent. Thank you!", fbEmpty: "Type something first.", fbDenied: "Your access level can’t send feedback here.", fbOff: "Feedback works when this page is opened on claude.ai.", fbFail: "Couldn’t send. Try again in a moment.", fbFull: "Feedback storage is full.", fbInbox: "Feedback received", fbNone: "No feedback yet.", someone: "Someone", 
@@ -426,7 +439,7 @@
       lose: "地雷を踏みました。Rで同じ盤面をもう一度、Nで新しいゲームを始めます。",
       win: t => `クリア! ${t}`, winRecord: t => `クリア! ${t}、自己ベスト更新です。`, winHinted: t => `クリア! ${t}(ヒント使用のため記録されません)`,
       firstSafe: "最初のクリックはどこでも安全です。", hintShown: "緑に光ったマスは安全です。", noHint: "開けられる安全なマスがありません。",
-      gmode: "ゲームモード", gm: { random: "完全ランダム", safe: "初手保証", noguess: "推測不要" }, generating: "推測なしで解ける盤面を作成中…", firstRandom: "完全ランダムモードでは最初のマスも地雷の可能性があります。", hintSafe: "緑に光ったマスは数字から確実に安全です。", hintMine: "赤く光ったマスは数字から確実に地雷です。旗を立てましょう。", hintWrongFlag: "光ったマスは安全ですが旗が立っています。旗を外してみてください。", noLogic: "今は数字だけで確定できるマスがありません。推測が必要な局面です。", byNumber: "番号で開始", numErr: "1〜999999 の数字を入力してください。", editor: "盤面エディタ", editHelp: "マスをクリックするかスペースキーで地雷を置いたり外したりします。盤面の大きさは難易度メニューで選びます。", editCount: n => `地雷 <b>${n}</b> 個`, editClear: "クリア", editPlay: "この盤面で遊ぶ", editCopy: "共有コードをコピー", editCopyLink: "共有リンクをコピー", editCopied: "コピーしました。友だちに送ってみましょう!", editCopyFail: "コピーできませんでした。下の欄の内容を直接コピーしてください。", editExit: "編集を終了", editLoad: "読み込む", editLoadPh: "共有コードかリンクを貼り付け", editBad: "コードを読み取れません。もう一度確認してください。", editLoaded: "盤面を読み込みました。", editNeed: "地雷を 1 個以上置き、空きマスも 1 つ以上残してください。", editedBoard: "作成した盤面", edited: "作成した盤面", sharedBoard: "共有された盤面です。初手保証がないので気をつけて!", restartNone: "まだ始まっていない盤面です。", restarted: "同じ盤面を最初からやり直します。",
+      gmode: "ゲームモード", gm: { random: "完全ランダム", safe: "初手保証", noguess: "推測不要" }, generating: "推測なしで解ける盤面を作成中…", firstRandom: "完全ランダムモードでは最初のマスも地雷の可能性があります。", hintSafe: "緑に光ったマスは数字から確実に安全です。", hintMine: "赤く光ったマスは数字から確実に地雷です。旗を立てましょう。", hintWrongFlag: "光ったマスは安全ですが旗が立っています。旗を外してみてください。", noLogic: "今は数字だけで確定できるマスがありません。推測が必要な局面です。", byNumber: "番号で開始", numErr: "1〜999999 の数字を入力してください。", editor: "盤面エディタ", editHelp: "マスをクリックするかスペースキーで地雷を置いたり外したりします。盤面の大きさは難易度メニューで選びます。", editCount: n => `地雷 <b>${n}</b> 個`, editClear: "クリア", editPlay: "この盤面で遊ぶ", editCopy: "共有コードをコピー", editCopyLink: "共有リンクをコピー", editCopied: "コピーしました。友だちに送ってみましょう!", editCopyFail: "コピーできませんでした。下の欄の内容を直接コピーしてください。", editExit: "編集を終了", editLoad: "読み込む", editLoadPh: "共有コードかリンクを貼り付け", editBad: "コードを読み取れません。もう一度確認してください。", editLoaded: "盤面を読み込みました。", editNeed: "地雷を 1 個以上置き、空きマスも 1 つ以上残してください。", editedBoard: "作成した盤面", edited: "作成した盤面", sharedBoard: "共有された盤面です。初手保証がないので気をつけて!", tools: "ツール", introText: "はじめてですか?マスをクリックすると開き、スペースキーか右クリックで旗を立てます。数字の上でスペースキーを押すと周りが一度に開きます。難易度とモードは左のメニューで選べます。", introOk: "わかった", tip: { lv: { beginner: "初めてならここから", intermediate: "慣れてきたら次の段階", expert: "クラシックの最高難度", nothuman: "ここから上級より大きな盤面", superman: "広い盤面、集中力が必要", alien: "長期戦を覚悟して", god: "最大の盤面", custom: "幅・高さ・地雷数を自分で決めます" }, gm: { random: "最初のクリックでも地雷を踏むことがある従来の方式", safe: "最初にクリックしたマスと周りの8マスには地雷がありません", noguess: "数字だけで必ず最後まで解ける盤面だけが出ます。推測は不要です" }, fit: "盤面を画面に合わせます", byNumber: "同じ番号で友だちと同じ盤面を遊べます", editor: "地雷を自分で置いて盤面を作り、リンクで共有します", hint: "数字から確実にわかるマスを教えます(記録には残りません)", stats: "難易度ごとのプレイ数・勝率・ベスト" }, restartNone: "まだ始まっていない盤面です。", restarted: "同じ盤面を最初からやり直します。",
       errW: "幅は5〜100で入力してください。", errH: "高さは5〜60で入力してください。", errM: n => `地雷は1〜${n}個で入力してください。`,
       statsTitle: "統計", cols: ["難易度", "プレイ", "勝利", "勝率", "ベスト", "総プレイ時間"], close: "閉じる", reset: "リセット",
       fb: "フィードバック", fbPh: "改善点やバグを書いてください", fbSend: "送信", fbSending: "送信中…", fbSent: "送信しました。ありがとうございます!", fbEmpty: "内容を入力してください。", fbDenied: "現在の権限ではフィードバックを送れません。", fbOff: "claude.ai で開いたときだけ送信できます。", fbFail: "送信できませんでした。少し後でもう一度お試しください。", fbFull: "フィードバックの保存容量がいっぱいです。", fbInbox: "受け取ったフィードバック", fbNone: "まだフィードバックはありません。", someone: "だれか", 
@@ -442,7 +455,7 @@
       lose: "踩到地雷了。按 R 重玩同一局,按 N 开始新游戏。",
       win: t => `通关! ${t}`, winRecord: t => `通关! ${t},新纪录!`, winHinted: t => `通关! ${t}(使用了提示,不计入纪录)`,
       firstSafe: "第一次点击总是安全的。", hintShown: "闪绿光的格子是安全的。", noHint: "没有可以打开的安全格子了。",
-      gmode: "游戏模式", gm: { random: "完全随机", safe: "首次点击安全", noguess: "无需猜测" }, generating: "正在生成无需猜测的棋盘…", firstRandom: "完全随机模式下,第一次点击也可能踩到地雷。", hintSafe: "闪绿光的格子根据数字可以确定是安全的。", hintMine: "闪红光的格子根据数字可以确定是地雷,请插旗。", hintWrongFlag: "闪光的格子是安全的,但上面插了旗,试着拔掉旗子。", noLogic: "现在仅凭数字无法确定任何格子,这里需要猜测。", byNumber: "按编号开始", numErr: "请输入 1 到 999999 之间的数字。", editor: "棋盘编辑器", editHelp: "点击格子或按空格键放置或移除地雷。棋盘大小请在难度菜单中选择。", editCount: n => `地雷 <b>${n}</b> 颗`, editClear: "清空", editPlay: "玩这个棋盘", editCopy: "复制分享码", editCopyLink: "复制分享链接", editCopied: "已复制,发给朋友吧!", editCopyFail: "复制失败,请直接复制下方框中的内容。", editExit: "退出编辑", editLoad: "载入", editLoadPh: "粘贴分享码或链接", editBad: "无法读取这个代码,请检查后重试。", editLoaded: "已载入棋盘。", editNeed: "请至少放置 1 颗地雷,并至少留出 1 个空格。", editedBoard: "自制棋盘", edited: "自制棋盘", sharedBoard: "这是分享来的棋盘,没有首次点击保护,请小心!", restartNone: "这一局还没有开始。", restarted: "从头重玩同一局。",
+      gmode: "游戏模式", gm: { random: "完全随机", safe: "首次点击安全", noguess: "无需猜测" }, generating: "正在生成无需猜测的棋盘…", firstRandom: "完全随机模式下,第一次点击也可能踩到地雷。", hintSafe: "闪绿光的格子根据数字可以确定是安全的。", hintMine: "闪红光的格子根据数字可以确定是地雷,请插旗。", hintWrongFlag: "闪光的格子是安全的,但上面插了旗,试着拔掉旗子。", noLogic: "现在仅凭数字无法确定任何格子,这里需要猜测。", byNumber: "按编号开始", numErr: "请输入 1 到 999999 之间的数字。", editor: "棋盘编辑器", editHelp: "点击格子或按空格键放置或移除地雷。棋盘大小请在难度菜单中选择。", editCount: n => `地雷 <b>${n}</b> 颗`, editClear: "清空", editPlay: "玩这个棋盘", editCopy: "复制分享码", editCopyLink: "复制分享链接", editCopied: "已复制,发给朋友吧!", editCopyFail: "复制失败,请直接复制下方框中的内容。", editExit: "退出编辑", editLoad: "载入", editLoadPh: "粘贴分享码或链接", editBad: "无法读取这个代码,请检查后重试。", editLoaded: "已载入棋盘。", editNeed: "请至少放置 1 颗地雷,并至少留出 1 个空格。", editedBoard: "自制棋盘", edited: "自制棋盘", sharedBoard: "这是分享来的棋盘,没有首次点击保护,请小心!", tools: "工具", introText: "第一次来吗?点击格子即可打开,按空格键或右键插旗。在数字上按空格键可一次打开周围的格子。难度和模式可以在左侧菜单中选择。", introOk: "知道了", tip: { lv: { beginner: "新手从这里开始", intermediate: "熟悉之后的下一步", expert: "经典扫雷的最高难度", nothuman: "从这里开始比高级更大", superman: "更大的棋盘,需要专注", alien: "准备好打持久战", god: "最大的棋盘", custom: "自己设定宽、高和地雷数" }, gm: { random: "经典方式:第一次点击也可能踩到地雷", safe: "第一次点击的格子及周围 8 格没有地雷", noguess: "只出现仅凭数字就能解完的棋盘,无需猜测" }, fit: "让棋盘适应窗口大小", byNumber: "用相同编号和朋友玩同一局", editor: "自己放置地雷制作棋盘,并用链接分享", hint: "提示一个能由数字确定的格子(该局不计入纪录)", stats: "各难度的局数、胜率和最佳纪录" }, restartNone: "这一局还没有开始。", restarted: "从头重玩同一局。",
       errW: "宽度请输入 5–100。", errH: "高度请输入 5–60。", errM: n => `地雷数请输入 1–${n}。`,
       statsTitle: "统计", cols: ["难度", "局数", "胜利", "胜率", "最佳", "总游戏时间"], close: "关闭", reset: "重置",
       fb: "反馈", fbPh: "写下改进建议或发现的问题", fbSend: "发送", fbSending: "发送中…", fbSent: "已发送,谢谢!", fbEmpty: "请先输入内容。", fbDenied: "你当前的权限无法发送反馈。", fbOff: "在 claude.ai 中打开时才能发送反馈。", fbFail: "发送失败,请稍后再试。", fbFull: "反馈存储空间已满。", fbInbox: "收到的反馈", fbNone: "还没有反馈。", someone: "某人", 
@@ -915,6 +928,7 @@
   function renderGameModes() {
     $("gmodes").querySelectorAll("button[data-gmode]").forEach(b => {
       b.firstChild.textContent = L().gm[b.dataset.gmode];
+      b.title = L().tip.gm[b.dataset.gmode];
       b.setAttribute("aria-pressed", String(b.dataset.gmode === gameMode));
     });
   }
@@ -1036,6 +1050,7 @@
       const l = LEVELS[key];
       b.innerHTML = `<span></span>${l ? `<small>${l.w}×${l.h}</small>` : ""}`;
       b.firstChild.textContent = L().lv[key];
+      b.title = (l ? `${l.w}×${l.h} · ${L().m} ${l.m} — ` : "") + L().tip.lv[key];
       b.addEventListener("click", () => chooseLevel(key));
       box.appendChild(b);
     }
@@ -1065,7 +1080,7 @@
     const t = L();
     document.documentElement.lang = lang;
     if (!PAGE_LANG) document.title = t.title === "지뢰찾기" ? "지뢰찾기 온라인 | MINE:D" : `${t.title} Online | MINE:D`;
-    const map = { "t-game": t.game, "t-new": t.new, "t-restart": t.restart, "t-byNumber": t.byNumber, "t-numGo": t.start, "t-editor": t.editor, "t-level": t.level, "t-gmode": t.gmode,
+    const map = { "t-game": t.game, "t-new": t.new, "t-restart": t.restart, "t-tools": t.tools, "introText": t.introText, "introOk": t.introOk, "t-byNumber": t.byNumber, "t-numGo": t.start, "t-editor": t.editor, "t-level": t.level, "t-gmode": t.gmode,
       "t-view": t.view, "t-fb": t.fb, "fbSend": t.fbSend, "modeLight": t.modeLight, "modeDark": t.modeDark, "zoomFit": t.fit, "t-help": t.help, "t-hint": t.hint, "t-stats": t.stats, "t-lang": t.lang,
       "t-time": t.time + ":", "t-diff": t.diff + ":", "t-mode": t.mode + ":", "t-gameNo": t.gameNo + ":",
       "t-minesLeft": t.minesLeft + ":", "t-cellsLeft": t.cellsLeft + ":", "t-w": t.w, "t-h": t.h, "t-m": t.m, "t-start": t.start,
@@ -1073,6 +1088,7 @@
       "statsReset2": t.resetYes, "resetAsk": t.resetAsk };
     for (const [id, text] of Object.entries(map)) $(id).textContent = text;
     $("langs").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+    for (const [id, k] of [["zoomFit", "fit"], ["byNumber", "byNumber"], ["editorBtn", "editor"], ["hint", "hint"], ["statsBtn", "stats"]]) $(id).title = t.tip[k];
     renderLevels(); renderGameModes(); paintHud(); paintStatus(); paintEditorText(); renderAbout();
     $("fbText").placeholder = t.fbPh; if (fbNoteKey) setFbNote(fbNoteKey, fbNoteCls);
     if (!$("statsDlg").hidden) renderStats();
@@ -1178,6 +1194,12 @@
   });
 
   addEventListener("pagehide", () => { if (started && !over) bankTime(); });
+
+  const INTRO = "minesweeper-intro-seen";
+  function hideIntro() { $("intro").hidden = true; write(INTRO, 1); }
+  if (!read(INTRO, 0)) $("intro").hidden = false;
+  $("introOk").addEventListener("click", hideIntro);
+  board.addEventListener("pointerdown", () => { if (!$("intro").hidden) hideIntro(); });
 
 
   // ---------- color mode (light = A, dark = B); follows the device until the player picks one ----------
