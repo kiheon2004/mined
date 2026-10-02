@@ -235,6 +235,13 @@
     <p class="err" id="customErr" hidden></p>
   </form>
 
+  <div class="group" id="gmodes">
+    <span id="t-gmode">게임 모드</span>
+    <button class="mi" type="button" data-gmode="random"><span>완전 랜덤</span></button>
+    <button class="mi" type="button" data-gmode="safe"><span>첫 시도 보장</span></button>
+    <button class="mi" type="button" data-gmode="noguess"><span>추측 불필요</span></button>
+  </div>
+
   <div class="group">
     <span id="t-view">보기</span>
     <div class="zoom">
@@ -265,7 +272,7 @@
     </div>
   </div>
 
-  <div class="group">
+  <div class="group" id="fbGroup">
     <span id="t-fb">피드백</span>
     <form class="fb" id="fbForm">
       <textarea id="fbText" maxlength="2000" rows="3" aria-labelledby="t-fb"></textarea>
@@ -357,7 +364,7 @@
       lose: "지뢰를 밟았어요. R로 같은 판을 다시 하거나 N으로 새 게임을 시작하세요.",
       win: t => `클리어! ${t}`, winRecord: t => `클리어! ${t}, 새 최고 기록이에요.`, winHinted: t => `클리어! ${t} (힌트를 써서 기록에는 남지 않아요)`,
       firstSafe: "첫 칸은 어디를 눌러도 안전해요.", hintShown: "초록색으로 반짝인 칸은 안전해요.", noHint: "열 수 있는 안전한 칸이 없어요.",
-      restartNone: "아직 시작하지 않은 판이에요.", restarted: "같은 판을 처음부터 다시 해요.",
+      gmode: "게임 모드", gm: { random: "완전 랜덤", safe: "첫 시도 보장", noguess: "추측 불필요" }, generating: "추측 없이 풀리는 판을 만드는 중…", firstRandom: "완전 랜덤 모드라 첫 칸도 지뢰일 수 있어요.", restartNone: "아직 시작하지 않은 판이에요.", restarted: "같은 판을 처음부터 다시 해요.",
       errW: "가로는 5~100 사이로 입력하세요.", errH: "세로는 5~60 사이로 입력하세요.", errM: n => `지뢰는 1~${n}개 사이로 입력하세요.`,
       statsTitle: "통계", cols: ["난이도", "플레이", "승리", "승률", "최고 기록", "총 플레이 시간"], close: "닫기", reset: "초기화",
       fb: "피드백", fbPh: "개선할 점이나 버그를 적어 주세요", fbSend: "보내기", fbSending: "보내는 중…", fbSent: "보냈어요. 고마워요!", fbEmpty: "내용을 입력해 주세요.", fbDenied: "이 보기 권한으로는 피드백을 보낼 수 없어요.", fbOff: "claude.ai에서 열었을 때만 피드백을 보낼 수 있어요.", fbFail: "보내지 못했어요. 잠시 후 다시 시도해 주세요.", fbFull: "피드백 저장 공간이 가득 찼어요.", fbInbox: "받은 피드백", fbNone: "아직 받은 피드백이 없어요.", someone: "누군가", 
@@ -373,7 +380,7 @@
       lose: "You hit a mine. Press R to replay this board or N for a new game.",
       win: t => `Cleared in ${t}!`, winRecord: t => `Cleared in ${t}! New best time.`, winHinted: t => `Cleared in ${t}! (Hints used, so it isn't recorded.)`,
       firstSafe: "Your first click is always safe.", hintShown: "The cell flashing green is safe.", noHint: "There are no safe cells left to open.",
-      restartNone: "This board hasn't started yet.", restarted: "Replaying the same board from the start.",
+      gmode: "Game mode", gm: { random: "Pure random", safe: "Safe first click", noguess: "No guessing" }, generating: "Building a board you can solve without guessing…", firstRandom: "Pure random mode: even your first click can hit a mine.", restartNone: "This board hasn't started yet.", restarted: "Replaying the same board from the start.",
       errW: "Width must be 5–100.", errH: "Height must be 5–60.", errM: n => `Mines must be 1–${n}.`,
       statsTitle: "Statistics", cols: ["Difficulty", "Played", "Won", "Win rate", "Best time", "Total play time"], close: "Close", reset: "Reset",
       fb: "Feedback", fbPh: "Ideas or bugs you noticed", fbSend: "Send", fbSending: "Sending…", fbSent: "Sent. Thank you!", fbEmpty: "Type something first.", fbDenied: "Your access level can’t send feedback here.", fbOff: "Feedback works when this page is opened on claude.ai.", fbFail: "Couldn’t send. Try again in a moment.", fbFull: "Feedback storage is full.", fbInbox: "Feedback received", fbNone: "No feedback yet.", someone: "Someone", 
@@ -389,7 +396,7 @@
       lose: "地雷を踏みました。Rで同じ盤面をもう一度、Nで新しいゲームを始めます。",
       win: t => `クリア! ${t}`, winRecord: t => `クリア! ${t}、自己ベスト更新です。`, winHinted: t => `クリア! ${t}(ヒント使用のため記録されません)`,
       firstSafe: "最初のクリックはどこでも安全です。", hintShown: "緑に光ったマスは安全です。", noHint: "開けられる安全なマスがありません。",
-      restartNone: "まだ始まっていない盤面です。", restarted: "同じ盤面を最初からやり直します。",
+      gmode: "ゲームモード", gm: { random: "完全ランダム", safe: "初手保証", noguess: "推測不要" }, generating: "推測なしで解ける盤面を作成中…", firstRandom: "完全ランダムモードでは最初のマスも地雷の可能性があります。", restartNone: "まだ始まっていない盤面です。", restarted: "同じ盤面を最初からやり直します。",
       errW: "幅は5〜100で入力してください。", errH: "高さは5〜60で入力してください。", errM: n => `地雷は1〜${n}個で入力してください。`,
       statsTitle: "統計", cols: ["難易度", "プレイ", "勝利", "勝率", "ベスト", "総プレイ時間"], close: "閉じる", reset: "リセット",
       fb: "フィードバック", fbPh: "改善点やバグを書いてください", fbSend: "送信", fbSending: "送信中…", fbSent: "送信しました。ありがとうございます!", fbEmpty: "内容を入力してください。", fbDenied: "現在の権限ではフィードバックを送れません。", fbOff: "claude.ai で開いたときだけ送信できます。", fbFail: "送信できませんでした。少し後でもう一度お試しください。", fbFull: "フィードバックの保存容量がいっぱいです。", fbInbox: "受け取ったフィードバック", fbNone: "まだフィードバックはありません。", someone: "だれか", 
@@ -405,7 +412,7 @@
       lose: "踩到地雷了。按 R 重玩同一局,按 N 开始新游戏。",
       win: t => `通关! ${t}`, winRecord: t => `通关! ${t},新纪录!`, winHinted: t => `通关! ${t}(使用了提示,不计入纪录)`,
       firstSafe: "第一次点击总是安全的。", hintShown: "闪绿光的格子是安全的。", noHint: "没有可以打开的安全格子了。",
-      restartNone: "这一局还没有开始。", restarted: "从头重玩同一局。",
+      gmode: "游戏模式", gm: { random: "完全随机", safe: "首次点击安全", noguess: "无需猜测" }, generating: "正在生成无需猜测的棋盘…", firstRandom: "完全随机模式下,第一次点击也可能踩到地雷。", restartNone: "这一局还没有开始。", restarted: "从头重玩同一局。",
       errW: "宽度请输入 5–100。", errH: "高度请输入 5–60。", errM: n => `地雷数请输入 1–${n}。`,
       statsTitle: "统计", cols: ["难度", "局数", "胜利", "胜率", "最佳", "总游戏时间"], close: "关闭", reset: "重置",
       fb: "反馈", fbPh: "写下改进建议或发现的问题", fbSend: "发送", fbSending: "发送中…", fbSent: "已发送,谢谢!", fbEmpty: "请先输入内容。", fbDenied: "你当前的权限无法发送反馈。", fbOff: "在 claude.ai 中打开时才能发送反馈。", fbFail: "发送失败,请稍后再试。", fbFull: "反馈存储空间已满。", fbInbox: "收到的反馈", fbNone: "还没有反馈。", someone: "某人", 
@@ -436,7 +443,8 @@
   let t0 = 0, timer = null, elapsed = 0;
   let cellPx = 28, statusKey = null, statusArg = null, statusCls = "";
 
-  const statKey = () => cfg.key === "custom" ? `custom-${cfg.w}x${cfg.h}-${cfg.m}` : cfg.key;
+  const modeSuffix = () => gameMode === "safe" ? "" : "@" + gameMode;
+  const statKey = () => (cfg.key === "custom" ? `custom-${cfg.w}x${cfg.h}-${cfg.m}` : cfg.key) + modeSuffix();
   const levelName = () => cfg.key === "custom" ? `${L().lv.custom} ${cfg.w}×${cfg.h}·${cfg.m}` : L().lv[cfg.key];
   const fmt = s => L().sec(s.toFixed(1));
   // 00:00.0 — minutes, seconds, tenths
@@ -479,6 +487,8 @@
 
   function buildBoard() {
     if (started && !over) bankTime();
+    if (genWorker) { genWorker.terminate(); genWorker = null; }
+    generating = false;
     const n = cfg.w * cfg.h;
     open = new Uint8Array(n); flags = new Uint8Array(n);
     started = false; over = false; openedCount = 0; flagCount = 0; hintUsed = false; elapsed = 0;
@@ -525,7 +535,7 @@
   // First click keeps the clicked cell and its neighbors clear.
   function placeMines(first) {
     const n = cfg.w * cfg.h;
-    let safe = new Set([first, ...neighbors(first)]);
+    let safe = gameMode === "random" ? new Set() : new Set([first, ...neighbors(first)]);
     if (n - safe.size < cfg.m) safe = new Set([first]);
     const pool = [];
     for (let i = 0; i < n; i++) if (!safe.has(i)) pool.push(i);
@@ -566,15 +576,19 @@
   }
 
   function openCell(i) {
-    if (over || open[i] || flags[i]) return;
-    if (!started) { if (!savedMines) placeMines(i); begin(); }
+    if (over || generating || open[i] || flags[i]) return;
+    if (!started) {
+      if (!savedMines && gameMode === "noguess") { generateNoGuess(i); return; }
+      if (!savedMines) placeMines(i);
+      begin();
+    }
     if (mines[i]) return lose(i);
     reveal(i);
     checkWin();
   }
 
   function chord(i) {
-    if (over || !open[i] || !counts[i]) return;
+    if (over || generating || !open[i] || !counts[i]) return;
     const ns = neighbors(i);
     if (ns.reduce((s, j) => s + flags[j], 0) !== counts[i]) return;
     for (const j of ns) if (!open[j] && !flags[j]) {
@@ -585,7 +599,7 @@
   }
 
   function toggleFlag(i) {
-    if (over || open[i]) return;
+    if (over || generating || open[i]) return;
     flags[i] ^= 1;
     flagCount += flags[i] ? 1 : -1;
     cells[i].classList.toggle("flag", !!flags[i]);
@@ -636,7 +650,8 @@
   // Hint: flash one safe unopened cell, preferring cells next to what's already open.
   function hint() {
     if (over) return;
-    if (!started && !savedMines) { setStatus("firstSafe", null, "info"); return; }
+    if (generating) return;
+    if (!started && !savedMines) { setStatus(gameMode === "random" ? "firstRandom" : "firstSafe", null, "info"); return; }
     const frontier = [], any = [];
     for (let i = 0; i < cells.length; i++) {
       if (open[i] || mines[i] || flags[i]) continue;
@@ -736,6 +751,7 @@
 
   // ---------- feedback: sent by email through Formspree ----------
   const FEEDBACK_URL = "https://formspree.io/f/__FORMSPREE_ID__";
+  if (FEEDBACK_URL.includes("__FORMSPREE_ID__")) $("fbGroup").hidden = true;  // shown once the Formspree form is set
   let fbNoteKey = null, fbNoteCls = "";
   function setFbNote(key, cls) {
     fbNoteKey = key; fbNoteCls = cls || "";
@@ -758,6 +774,122 @@
       $("fbText").value = ""; setFbNote("fbSent", "ok");
     } catch { setFbNote("fbFail", "bad"); }
     finally { $("fbSend").disabled = false; }
+  });
+
+
+  const NOGUESS_SRC = `
+  function rngF(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function genNoGuess(w, h, m, first, seed) {
+    const n = w * h, N = new Array(n);
+    for (let i = 0; i < n; i++) { const x = i % w, y = (i / w) | 0, a = [];
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (!dx && !dy) continue;
+        const nx = x + dx, ny = y + dy; if (nx >= 0 && ny >= 0 && nx < w && ny < h) a.push(ny * w + nx); }
+      N[i] = a; }
+    const rand = rngF(seed), zone = new Uint8Array(n);
+    zone[first] = 1; for (const j of N[first]) zone[j] = 1;
+    if (n - N[first].length - 1 < m) { zone.fill(0); zone[first] = 1; }
+    const pool = []; for (let i = 0; i < n; i++) if (!zone[i]) pool.push(i);
+    const fresh = () => { const mm = new Uint8Array(n);
+      for (let k = 0; k < m; k++) { const j = k + Math.floor(rand() * (pool.length - k)); const t = pool[k]; pool[k] = pool[j]; pool[j] = t; mm[pool[k]] = 1; }
+      return mm; };
+    function solve(mines) {
+      const cnt = new Uint8Array(n); for (let i = 0; i < n; i++) if (!mines[i]) { let s = 0; for (const j of N[i]) s += mines[j]; cnt[i] = s; }
+      const opened = new Uint8Array(n), flag = new Uint8Array(n); let openN = 0, flagN = 0;
+      const openc = i => { const st = [i]; while (st.length) { const k = st.pop(); if (opened[k]) continue; opened[k] = 1; openN++;
+        if (!cnt[k]) for (const j of N[k]) if (!opened[j]) st.push(j); } };
+      const mark = j => { if (!flag[j]) { flag[j] = 1; flagN++; } };
+      openc(first);
+      for (;;) {
+        let changed = false; const cons = [], seen = new Set();
+        for (let i = 0; i < n; i++) {
+          if (!opened[i] || !cnt[i]) continue;
+          const unk = []; let f = 0;
+          for (const j of N[i]) { if (flag[j]) f++; else if (!opened[j]) unk.push(j); }
+          if (!unk.length) continue;
+          const need = cnt[i] - f;
+          if (need === 0) { for (const j of unk) openc(j); changed = true; }
+          else if (need === unk.length) { for (const j of unk) mark(j); changed = true; }
+          else { const key = unk.join(",") + ":" + need; if (!seen.has(key)) { seen.add(key); cons.push([unk, need]); } }
+        }
+        if (changed) continue;
+        // subset rule: if A's cells sit inside B, then B minus A holds needB - needA mines
+        const byCell = new Map();
+        cons.forEach((c, k) => { for (const x of c[0]) { let l = byCell.get(x); if (!l) byCell.set(x, l = []); l.push(k); } });
+        outer: for (let a = 0; a < cons.length; a++) {
+          const [ca, na] = cons[a], cand = new Set();
+          for (const x of ca) for (const b of byCell.get(x)) if (b !== a) cand.add(b);
+          for (const b of cand) {
+            const [cb, nb] = cons[b];
+            if (ca.length >= cb.length || !ca.every(x => cb.includes(x))) continue;
+            const diff = cb.filter(x => !ca.includes(x)), d = nb - na;
+            if (d === 0) { for (const j of diff) if (!opened[j]) { openc(j); changed = true; } }
+            else if (d === diff.length) { for (const j of diff) if (!flag[j]) { mark(j); changed = true; } }
+            if (changed) break outer;
+          }
+        }
+        if (changed) continue;
+        // mine counter: no mines left means every hidden cell is safe, and vice versa
+        const hidden = n - openN - flagN, left = m - flagN;
+        if (hidden && left === 0) { for (let i = 0; i < n; i++) if (!opened[i] && !flag[i]) openc(i); continue; }
+        if (hidden && left === hidden) { for (let i = 0; i < n; i++) if (!opened[i] && !flag[i]) mark(i); continue; }
+        break;
+      }
+      return { solved: openN === n - m, opened, flag };
+    }
+    const t0 = Date.now(); let mines = fresh(), tries = 0;
+    for (;;) {
+      tries++;
+      const r = solve(mines);
+      if (r.solved) return { mines, tries, ms: Date.now() - t0 };
+      if (Date.now() - t0 > 20000) return { mines, tries, ms: Date.now() - t0, gaveUp: true };
+      const stuck = [], spare = [];
+      for (let i = 0; i < n; i++) {
+        if (r.opened[i] || zone[i]) continue;
+        if (N[i].some(j => r.opened[j])) { if (mines[i] && !r.flag[i]) stuck.push(i); }
+        else if (!mines[i]) spare.push(i);
+      }
+      if (stuck.length && spare.length && tries % 60) {
+        const a = stuck[Math.floor(rand() * stuck.length)], b = spare[Math.floor(rand() * spare.length)];
+        mines[a] = 0; mines[b] = 1;
+      } else mines = fresh();
+    }
+  }
+  self.onmessage = e => { const d = e.data; postMessage(genNoGuess(d.w, d.h, d.m, d.first, d.seed)); };`;
+  let genWorker = null, generating = false;
+  function generateNoGuess(first) {
+    generating = true;
+    setStatus("generating", null, "info");
+    const job = { w: cfg.w, h: cfg.h, m: cfg.m, first, seed: gameNo * 7919 + first };
+    const done = res => {
+      genWorker = null; generating = false;
+      mines = res.mines; computeCounts(); savedMines = mines.slice();
+      begin(); reveal(first); checkWin();
+    };
+    try {
+      genWorker = new Worker(URL.createObjectURL(new Blob([NOGUESS_SRC], { type: "text/javascript" })));
+      genWorker.onmessage = e => { genWorker.terminate(); done(e.data); };
+      genWorker.postMessage(job);
+    } catch {  // workers unavailable: run it here (the page pauses briefly)
+      const self = {}; const gen = new Function("self", "postMessage", NOGUESS_SRC + "; return genNoGuess;")(self, () => {});
+      done(gen(job.w, job.h, job.m, job.first, job.seed));
+    }
+  }
+
+  // ---------- game mode ----------
+  const GMODES = ["random", "safe", "noguess"];
+  let gameMode = read("minesweeper-gamemode", "safe");
+  if (!GMODES.includes(gameMode)) gameMode = "safe";
+  function renderGameModes() {
+    $("gmodes").querySelectorAll("button[data-gmode]").forEach(b => {
+      b.firstChild.textContent = L().gm[b.dataset.gmode];
+      b.setAttribute("aria-pressed", String(b.dataset.gmode === gameMode));
+    });
+  }
+  $("gmodes").addEventListener("click", e => {
+    const b = e.target.closest("button[data-gmode]"); if (!b || b.dataset.gmode === gameMode) return;
+    gameMode = b.dataset.gmode; write("minesweeper-gamemode", gameMode);
+    renderGameModes(); newGame();
   });
 
   // ---------- menu / text ----------
@@ -789,7 +921,7 @@
 
   function paintHud() {
     $("lvlLabel").textContent = levelName();
-    $("modeLabel").textContent = L().modeVal;
+    $("modeLabel").textContent = L().gm[gameMode];
     $("gameNo").textContent = gameNo;
     paintCounts();
   }
@@ -798,7 +930,7 @@
     const t = L();
     document.documentElement.lang = lang;
     document.title = t.title === "지뢰찾기" ? "지뢰찾기 온라인 | MINE:D" : `${t.title} Online | MINE:D`;
-    const map = { "t-game": t.game, "t-new": t.new, "t-restart": t.restart, "t-level": t.level,
+    const map = { "t-game": t.game, "t-new": t.new, "t-restart": t.restart, "t-level": t.level, "t-gmode": t.gmode,
       "t-view": t.view, "t-fb": t.fb, "fbSend": t.fbSend, "modeLight": t.modeLight, "modeDark": t.modeDark, "zoomFit": t.fit, "t-help": t.help, "t-hint": t.hint, "t-stats": t.stats, "t-lang": t.lang,
       "t-time": t.time + ":", "t-diff": t.diff + ":", "t-mode": t.mode + ":", "t-gameNo": t.gameNo + ":",
       "t-minesLeft": t.minesLeft + ":", "t-cellsLeft": t.cellsLeft + ":", "t-w": t.w, "t-h": t.h, "t-m": t.m, "t-start": t.start,
@@ -806,7 +938,7 @@
       "statsReset2": t.resetYes, "resetAsk": t.resetAsk };
     for (const [id, text] of Object.entries(map)) $(id).textContent = text;
     $("langs").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
-    renderLevels(); paintHud(); paintStatus(); renderAbout();
+    renderLevels(); renderGameModes(); paintHud(); paintStatus(); renderAbout();
     $("fbText").placeholder = t.fbPh; if (fbNoteKey) setFbNote(fbNoteKey, fbNoteCls);
     if (!$("statsDlg").hidden) renderStats();
   }
@@ -814,8 +946,13 @@
   // ---------- stats dialog ----------
   function renderStats() {
     const t = L();
-    const rows = Object.keys(LEVELS).map(k => [t.lv[k], stats[k]]);
-    for (const [k, s] of Object.entries(stats)) if (k.startsWith("custom-")) rows.push([`${t.lv.custom} ${k.slice(7).replace("x", "×").replace("-", "·")}`, s]);
+    const sfx = modeSuffix();
+    $("t-statsTitle").textContent = `${t.statsTitle} · ${t.gm[gameMode]}`;
+    const rows = Object.keys(LEVELS).map(k => [t.lv[k], stats[k + sfx]]);
+    for (const [k, s] of Object.entries(stats)) {
+      if (!k.startsWith("custom-") || (sfx ? !k.endsWith(sfx) : k.includes("@"))) continue;
+      rows.push([`${t.lv.custom} ${k.slice(7, sfx ? -sfx.length : undefined).replace("x", "×").replace("-", "·")}`, s]);
+    }
     $("statsTable").innerHTML = `<thead><tr>${t.cols.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>` +
       rows.map(([name, s]) => {
         const p = s?.played || 0, w = s?.won || 0;
