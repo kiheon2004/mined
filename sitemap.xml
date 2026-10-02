@@ -1,4 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://playmined.com/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url><loc>https://playmined.com/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://playmined.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://playmined.com/en/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://playmined.com/ja/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://playmined.com/zh/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://playmined.com/"/>
+  </url>
+  <url><loc>https://playmined.com/en/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://playmined.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://playmined.com/en/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://playmined.com/ja/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://playmined.com/zh/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://playmined.com/"/>
+  </url>
+  <url><loc>https://playmined.com/ja/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://playmined.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://playmined.com/en/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://playmined.com/ja/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://playmined.com/zh/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://playmined.com/"/>
+  </url>
+  <url><loc>https://playmined.com/zh/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://playmined.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://playmined.com/en/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://playmined.com/ja/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://playmined.com/zh/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://playmined.com/"/>
+  </url>
 </urlset>
