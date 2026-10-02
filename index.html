@@ -119,6 +119,14 @@
   .modes button { font: 500 12px var(--font-ui); background: none; border: 1px solid transparent; color: var(--muted);
                   border-radius: 5px; padding: 4px 6px; cursor: pointer; }
   .modes button[aria-pressed="true"] { color: var(--ink); border-color: var(--open-line); background: var(--panel); }
+  .fb { display: grid; gap: 6px; padding: 0 4px; }
+  .fb textarea { width: 100%; resize: vertical; min-height: 64px; padding: 6px 8px; border: 1px solid var(--open-line); border-radius: 6px;
+                 background: var(--open); color: var(--ink); font: 12.5px/1.45 var(--font-ui); }
+  .fb .go { font: 600 12px var(--font-ui); background: var(--ink); color: var(--ground); border: 0; border-radius: 6px; padding: 6px; cursor: pointer; }
+  .fb .go:disabled { opacity: 0.4; cursor: default; }
+  .fb .note { margin: 0; font-size: 11.5px; color: var(--muted); min-height: 1em; }
+  .fb .note.ok { color: var(--n2); } .fb .note.bad { color: var(--boom); }
+  .fb .trap { position: absolute; left: -9999px; }
   .langs { display: grid; grid-template-columns: repeat(2, max-content); justify-content: start; gap: 3px; padding: 0 4px; }
   .langs button { font: 500 12px var(--font-ui); background: none; border: 1px solid transparent; color: var(--muted);
                   border-radius: 5px; padding: 3px 6px; cursor: pointer; }
@@ -257,6 +265,16 @@
     </div>
   </div>
 
+  <div class="group">
+    <span id="t-fb">피드백</span>
+    <form class="fb" id="fbForm">
+      <textarea id="fbText" maxlength="2000" rows="3" aria-labelledby="t-fb"></textarea>
+      <input class="trap" type="text" id="fbTrap" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="go" type="submit" id="fbSend">보내기</button>
+      <p class="note" id="fbNote" aria-live="polite"></p>
+    </form>
+  </div>
+
 </nav>
 
 <main class="stage" id="stage">
@@ -274,7 +292,7 @@
 
 <article class="about" id="about" lang="ko">
   <h1>지뢰찾기 온라인</h1>
-  <p>MINE:D는 설치 없이 브라우저에서 바로 하는 무료 지뢰찾기 게임입니다.<br>첫 클릭은 항상 안전하고, 초급부터 80×50 칸에 지뢰 1,100개가 숨은 '신' 난이도까지 7단계로 도전할 수 있습니다.</p>
+  <p>MINE:D는 설치 없이 브라우저에서 바로 하는 무료 지뢰찾기 게임입니다.<br>첫 클릭은 항상 안전하고, 초급부터 80×50 칸에 지뢰 760개가 숨은 '신' 난이도까지 7단계로 도전할 수 있습니다.</p>
   <h2>하는 법</h2>
   <ul>
     <li>칸을 클릭해 엽니다. 숫자는 주변 8칸에 있는 지뢰 개수입니다.</li>
@@ -288,10 +306,10 @@
     <tr><td>초급</td><td>9×9</td><td>10</td></tr>
     <tr><td>중급</td><td>16×16</td><td>40</td></tr>
     <tr><td>고급</td><td>30×16</td><td>99</td></tr>
-    <tr><td>낫휴먼</td><td>40×25</td><td>220</td></tr>
-    <tr><td>슈퍼맨</td><td>50×32</td><td>380</td></tr>
-    <tr><td>에일리언</td><td>64×40</td><td>660</td></tr>
-    <tr><td>신</td><td>80×50</td><td>1,100</td></tr>
+    <tr><td>낫휴먼</td><td>40×25</td><td>200</td></tr>
+    <tr><td>슈퍼맨</td><td>50×32</td><td>320</td></tr>
+    <tr><td>에일리언</td><td>64×40</td><td>512</td></tr>
+    <tr><td>신</td><td>80×50</td><td>760</td></tr>
   </table>
   <h2>단축키</h2>
   <p>N 새 게임 · R 같은 판 재시작 · H 힌트 · S 통계 · +/− 확대·축소</p>
@@ -321,10 +339,10 @@
     beginner:     { w: 9,  h: 9,  m: 10 },
     intermediate: { w: 16, h: 16, m: 40 },
     expert:       { w: 30, h: 16, m: 99 },
-    nothuman:     { w: 40, h: 25, m: 220 },
-    superman:     { w: 50, h: 32, m: 380 },
-    alien:        { w: 64, h: 40, m: 660 },
-    god:          { w: 80, h: 50, m: 1100 },
+    nothuman:     { w: 40, h: 25, m: 200 },   // ~20% mines from here up: bigger boards, same density as Expert
+    superman:     { w: 50, h: 32, m: 320 },
+    alien:        { w: 64, h: 40, m: 512 },
+    god:          { w: 80, h: 50, m: 760 },
   };
 
   // ---------- text ----------
@@ -398,12 +416,12 @@
   // ---------- storage (this browser only) ----------
   const read = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch { return d; } };
   const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
-  const STATS = "minesweeper-stats-v2";
+  const STATS = "minesweeper-stats-v3";
   let stats = read(STATS, null);
-  if (!stats) {  // carry over best times from the earlier version for levels whose size didn't change
+  if (!stats) {  // v3 (mine counts changed): keep play counts and time, reset every best time
     stats = {};
-    const old = read("minesweeper-best-v1", {});
-    for (const k of ["beginner", "intermediate", "expert"]) if (old[k] != null) stats[k] = { played: 0, won: 0, best: old[k] };
+    const old = read("minesweeper-stats-v2", {});
+    for (const [k, s] of Object.entries(old)) stats[k] = { ...s, best: null };
     write(STATS, stats);
   }
   let lang = read("minesweeper-lang", null) || "ko";
@@ -667,7 +685,7 @@
   const ABOUT = {
     en: {
       h1: "Minesweeper Online",
-      intro: "MINE:D is a free Minesweeper game you play right in your browser, no install needed.<br>Your first click is always safe, and there are 7 difficulty levels, from Beginner up to God: an 80×50 board hiding 1,100 mines.",
+      intro: "MINE:D is a free Minesweeper game you play right in your browser, no install needed.<br>Your first click is always safe, and there are 7 difficulty levels, from Beginner up to God: an 80×50 board hiding 760 mines.",
       how: "How to play",
       steps: ["Click a cell to open it. A number shows how many mines touch that cell's 8 neighbors.",
               "Put a flag on a cell you think is a mine with the space bar or a right-click.",
@@ -679,7 +697,7 @@
     },
     ja: {
       h1: "マインスイーパー オンライン",
-      intro: "MINE:D はインストール不要、ブラウザですぐ遊べる無料のマインスイーパーです。<br>最初のクリックは必ず安全。初級から、80×50 マスに地雷 1,100 個が潜む「神」まで 7 段階の難易度に挑戦できます。",
+      intro: "MINE:D はインストール不要、ブラウザですぐ遊べる無料のマインスイーパーです。<br>最初のクリックは必ず安全。初級から、80×50 マスに地雷 760 個が潜む「神」まで 7 段階の難易度に挑戦できます。",
       how: "遊び方",
       steps: ["マスをクリックして開きます。数字は周囲 8 マスにある地雷の数です。",
               "地雷だと思うマスには、スペースキーか右クリックで旗を立てます。",
@@ -691,7 +709,7 @@
     },
     zh: {
       h1: "在线扫雷",
-      intro: "MINE:D 是一款无需安装、在浏览器中直接玩的免费扫雷游戏。<br>第一次点击永远安全,共有 7 个难度,从初级一直到在 80×50 格中藏着 1,100 颗地雷的「神」级。",
+      intro: "MINE:D 是一款无需安装、在浏览器中直接玩的免费扫雷游戏。<br>第一次点击永远安全,共有 7 个难度,从初级一直到在 80×50 格中藏着 760 颗地雷的「神」级。",
       how: "玩法",
       steps: ["点击格子将其打开。数字表示周围 8 格中地雷的数量。",
               "在你认为是地雷的格子上按空格键或右键插旗。",
@@ -715,6 +733,32 @@
       <h2>${a.levels}</h2><table><tr>${a.cols.map(c => `<th>${c}</th>`).join("")}</tr>${rows}</table>
       <h2>${a.keys}</h2><p>${a.keyLine}</p><footer>${a.foot}</footer>`;
   }
+
+  // ---------- feedback: sent by email through Formspree ----------
+  const FEEDBACK_URL = "https://formspree.io/f/__FORMSPREE_ID__";
+  let fbNoteKey = null, fbNoteCls = "";
+  function setFbNote(key, cls) {
+    fbNoteKey = key; fbNoteCls = cls || "";
+    $("fbNote").textContent = key ? L()[key] : "";
+    $("fbNote").className = "note " + fbNoteCls;
+  }
+  $("fbForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const message = $("fbText").value.trim();
+    if (!message) { setFbNote("fbEmpty", "bad"); return; }
+    if ($("fbTrap").value) return;  // bots fill the hidden field
+    $("fbSend").disabled = true; setFbNote("fbSending");
+    try {
+      const r = await fetch(FEEDBACK_URL, {
+        method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ message, level: levelName(), lang, mode: document.documentElement.dataset.theme || "system",
+                               gameNo, page: location.href, _subject: "MINE:D 피드백" }),
+      });
+      if (!r.ok) throw new Error(r.status);
+      $("fbText").value = ""; setFbNote("fbSent", "ok");
+    } catch { setFbNote("fbFail", "bad"); }
+    finally { $("fbSend").disabled = false; }
+  });
 
   // ---------- menu / text ----------
   function renderLevels() {
@@ -755,7 +799,7 @@
     document.documentElement.lang = lang;
     document.title = t.title === "지뢰찾기" ? "지뢰찾기 온라인 | MINE:D" : `${t.title} Online | MINE:D`;
     const map = { "t-game": t.game, "t-new": t.new, "t-restart": t.restart, "t-level": t.level,
-      "t-view": t.view, "modeLight": t.modeLight, "modeDark": t.modeDark, "zoomFit": t.fit, "t-help": t.help, "t-hint": t.hint, "t-stats": t.stats, "t-lang": t.lang,
+      "t-view": t.view, "t-fb": t.fb, "fbSend": t.fbSend, "modeLight": t.modeLight, "modeDark": t.modeDark, "zoomFit": t.fit, "t-help": t.help, "t-hint": t.hint, "t-stats": t.stats, "t-lang": t.lang,
       "t-time": t.time + ":", "t-diff": t.diff + ":", "t-mode": t.mode + ":", "t-gameNo": t.gameNo + ":",
       "t-minesLeft": t.minesLeft + ":", "t-cellsLeft": t.cellsLeft + ":", "t-w": t.w, "t-h": t.h, "t-m": t.m, "t-start": t.start,
       "t-controls": t.controls, "t-statsTitle": t.statsTitle, "statsClose": t.close, "statsReset": t.reset,
@@ -763,6 +807,7 @@
     for (const [id, text] of Object.entries(map)) $(id).textContent = text;
     $("langs").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
     renderLevels(); paintHud(); paintStatus(); renderAbout();
+    $("fbText").placeholder = t.fbPh; if (fbNoteKey) setFbNote(fbNoteKey, fbNoteCls);
     if (!$("statsDlg").hidden) renderStats();
   }
 
