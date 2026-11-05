@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Generate the English, Japanese and Chinese pages (en/, ja/, zh/) and sitemap.xml from index.html.
+"""Generate the English, Japanese and Chinese pages (en/, ja/, zh/), sitemap.xml and robots.txt from index.html.
 Run after every change to index.html:   python3 build_langs.py
+The domain comes from CNAME (set-domain.sh changes it); the build stops if index.html points anywhere else.
 """
-import json, os, re
+import json, os, re, sys
 ROOT = os.path.dirname(os.path.abspath(__file__))
-SITE = "https://playmined.com"
+DOMAIN = open(os.path.join(ROOT, "CNAME"), encoding="utf-8").read().strip()
+SITE = f"https://{DOMAIN}"
 LEVELS = [("beginner", 9, 9, 10), ("intermediate", 16, 16, 40), ("expert", 30, 16, 99), ("nothuman", 40, 25, 200),
           ("superman", 50, 32, 320), ("alien", 64, 40, 512), ("god", 80, 50, 760)]
 PAGES = {
@@ -19,6 +21,18 @@ PAGES = {
                og="在浏览器中直接玩的免费扫雷。从初级到「神」级共 7 个难度。"),
 }
 src = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
+
+# every absolute link in the page head and the share-link host in the script must use the CNAME domain
+head_ko = re.search(r"<!-- seo:start.*?<!-- seo:end -->", src, re.S).group(0)
+hosts = {h for h in re.findall(r"https://([a-z0-9.-]+)", head_ko) if h != "schema.org"}
+problems = [f"index.html head links to {h}" for h in sorted(hosts - {DOMAIN})]
+if f'const SITE_HOST = "{DOMAIN}";' not in src:
+    problems.append("index.html SITE_HOST does not match CNAME")
+for need in [f'<link rel="canonical" href="{SITE}/">', f'<meta property="og:url" content="{SITE}/">', f'"url":"{SITE}/","inLanguage":"ko"']:
+    if need not in src:
+        problems.append("index.html is missing " + need)
+if problems:
+    sys.exit("domain mismatch with CNAME (" + DOMAIN + "):\n  " + "\n  ".join(problems) + "\nRun ./set-domain.sh to move the site to a domain.")
 about = json.loads(re.search(r'<script type="application/json" id="about-data">(.*?)</script>', src, re.S).group(1))
 esc = lambda t: t.replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;")
 for lang, meta in PAGES.items():
@@ -33,8 +47,9 @@ for lang, meta in PAGES.items():
     new = re.sub(r'<meta property="og:description" content="[^"]*">', f'<meta property="og:description" content="{esc(meta["og"])}">', new)
     new = new.replace(f'<meta property="og:url" content="{SITE}/">', f'<meta property="og:url" content="{url}">')
     new = new.replace('<meta property="og:locale" content="ko_KR">', f'<meta property="og:locale" content="{meta["locale"]}">')
-    new = new.replace('"name":"지뢰찾기 온라인 | MINE:D","url":"https://playmined.com/"', f'"name":"{meta["title"]}","url":"{url}"')
-    new = new.replace('"url":"https://playmined.com/","inLanguage":"ko"', f'"url":"{url}","inLanguage":"{lang}"')
+    new = new.replace(f'"name":"지뢰찾기 온라인 | MINE:D","url":"{SITE}/"', f'"name":"{meta["title"]}","url":"{url}"')
+    new = new.replace(f'"url":"{SITE}/","inLanguage":"ko"', f'"url":"{url}","inLanguage":"{lang}"')
+    json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', new, re.S).group(1))   # still valid JSON-LD
     s = s.replace(head, new)
     # guide below the board, pre-rendered so search engines read it in this language
     a = about[lang]
@@ -52,4 +67,5 @@ urls = "".join(f"\n  <url><loc>{SITE}{p}</loc>{alts}\n  </url>" for p in ["/", "
 open(os.path.join(ROOT, "sitemap.xml"), "w", encoding="utf-8").write(
     '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">'
     + urls + "\n</urlset>\n")
-print("built: en/ ja/ zh/ and sitemap.xml")
+open(os.path.join(ROOT, "robots.txt"), "w", encoding="utf-8").write(f"User-agent: *\nAllow: /\n\nSitemap: {SITE}/sitemap.xml\n")
+print(f"built for {DOMAIN}: en/ ja/ zh/, sitemap.xml and robots.txt")

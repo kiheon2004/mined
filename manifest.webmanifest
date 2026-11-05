@@ -1,0 +1,15 @@
+{
+  "name": "MINE:D 지뢰찾기",
+  "short_name": "MINE:D",
+  "description": "설치 없이 하는 무료 지뢰찾기. 첫 클릭 안전, 추측 불필요 모드, 오늘의 판.",
+  "lang": "ko",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#e3e0d9",
+  "theme_color": "#e3e0d9",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

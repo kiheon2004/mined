@@ -19,6 +19,7 @@
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[
  {"@type":"WebSite","name":"MINE:D","alternateName":["MINED","마인디","MINE:D 지뢰찾기"],"url":"https://playmined.com/en/","inLanguage":"en"},
@@ -114,6 +115,7 @@
     padding: 2px 8px; line-height: 1.3; text-align: left; cursor: pointer; transition: color 0.15s;
   }
   .mi:hover { background: var(--panel); }
+  .mi:disabled { opacity: 0.45; cursor: default; background: none; }
   .mi:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   .mi kbd, .mi small { font: 700 10.5px var(--font-num); color: var(--muted); }
   .menu:hover .mi, .menu:focus-within .mi { color: var(--ink); }
@@ -149,10 +151,11 @@
 
   /* ---------- stage (board centered on the whole page) ---------- */
   .stage {
-    position: relative; height: 100vh; overflow: auto; overscroll-behavior-x: contain; overscroll-behavior-y: auto; display: flex;
-    margin: 0 calc(var(--menu-w) + 12px);
+    position: relative; height: 100vh; box-sizing: border-box; overflow: auto;   /* padding inside the 100vh, so nothing hangs below the window */ overscroll-behavior-x: contain; overscroll-behavior-y: auto; display: flex;
+    margin: 0 calc(var(--menu-w) + 44px);   /* the menu box is --menu-w + 28px of padding, then a 16px gap */
     padding: calc(16px + env(safe-area-inset-top, 0px)) 0 calc(16px + env(safe-area-inset-bottom, 0px));
   }
+  .stage.wide { margin-right: 16px; }  /* a board too wide for the centered column also takes the right-hand margin */
   .play { margin: auto; display: grid; gap: 10px; justify-items: center; }
   .hud {
     display: grid; grid-template-columns: auto auto 1fr auto auto; column-gap: 8px; row-gap: 3px;
@@ -165,21 +168,34 @@
   .hud .gap { grid-column: 3; }
   .status { min-height: 1.4em; margin: 0; text-align: center; font-weight: 600; font-size: 14px; }
   .status.win { color: var(--n2); } .status.lose { color: var(--boom); } .status.info { color: var(--muted); }
+  .statusact { font: 600 12.5px var(--font-ui); padding: 5px 12px; margin-top: -4px; }
+  /* touch screens: explicit open / flag switch (taps never block scrolling) */
+  .touchmode { display: none; gap: 0; border: 1px solid var(--open-line); border-radius: 8px; overflow: hidden; }
+  .touchmode button { font: 600 13px var(--font-ui); background: var(--open); color: var(--muted); border: 0; padding: 7px 18px; cursor: pointer; }
+  .touchmode button[aria-pressed="true"] { background: var(--ink); color: var(--ground); }
+  .holdset { display: none; gap: 4px; align-items: center; font-size: 12px; color: var(--muted); margin-top: -4px; }
+  @media (any-pointer: coarse) { .touchmode { display: inline-flex; } .holdset { display: flex; } }
+  .holdset button { font: 600 12px var(--font-ui); background: none; color: var(--muted); border: 1px solid transparent; border-radius: 6px; padding: 3px 7px; cursor: pointer; }
+  .holdset button[aria-pressed="true"] { color: var(--ink); border-color: var(--open-line); background: var(--panel); }
+  .wstats { margin: -4px 0 0; font: 600 12.5px var(--font-num); color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
   .controls { margin: 0; font-size: 11.5px; color: var(--muted); opacity: 0.8; text-align: center; }
 
-  .board { display: grid; width: max-content; user-select: none; -webkit-user-select: none;
+  .board { display: flex; flex-direction: column; width: max-content; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; position: relative;
            border: 2px solid var(--tile-lo); border-radius: 4px; background: var(--tile-lo);
-           box-shadow: 0 12px 34px rgb(0 0 0 / 0.12); }
+           box-shadow: 0 12px 34px rgb(0 0 0 / 0.12);
+           will-change: transform; }  /* own layer: when the status line below changes height and the board shifts, it moves without repainting every cell */
+  .brow { display: flex; }   /* real row boxes: a change inside a row lays out that row only (display: contents rows made WebKit redo the whole board) */
   .cell {
     --bev: max(1px, calc(var(--cell) * 0.07));
     width: var(--cell); height: var(--cell); padding: 0; margin: 0; border: 0;
-    display: grid; place-items: center; cursor: pointer;
+    display: grid; place-items: center; cursor: pointer; touch-action: manipulation;
     font: 800 calc(var(--cell) * var(--num-scale)) var(--font-num); line-height: 1;
     background: var(--tile); color: var(--ink);
     box-shadow: inset var(--bev) var(--bev) 0 var(--tile-hi), inset calc(var(--bev) * -1) calc(var(--bev) * -1) 0 var(--tile-lo);
   }
   .cell:hover:not(.open) { filter: brightness(1.07); }
-  .cell:focus, .cell:focus-visible { outline: none; }  /* no orange focus ring on the clicked cell */
+  .cell:focus { outline: none; }  /* no orange focus ring on the clicked cell... */
+  .cell:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; position: relative; z-index: 3; }  /* ...but keyboard focus shows */
   .cell.open { background: var(--open); box-shadow: inset 0 0 0 0.5px var(--open-line); cursor: default; }
   .cell.open.num { cursor: pointer; }
   .cell.flag::after { content: ""; width: 42%; height: 46%; background: var(--accent);
@@ -190,6 +206,14 @@
   .cell.wrong::after { content: "×"; width: auto; height: auto; background: none; clip-path: none; color: var(--boom); font-size: calc(var(--cell) * 0.72); }
   .cell.hint { background: var(--hint); position: relative; z-index: 2; }
   .cell.hint-mine { background: var(--boom); position: relative; z-index: 2; }
+  /* paused: the board is covered so the clock can stop without giving free thinking time */
+  .board.paused::after { content: attr(data-pause); position: absolute; inset: 0; z-index: 5; display: grid; place-items: center;
+                         background: var(--tile); color: var(--ink); font: 600 15px var(--font-ui); cursor: pointer; }
+  /* touch: a ring fills while a cell is held; when it is full the cell is flagged */
+  .cell.holding { position: relative; }
+  .cell.holding::before { content: ""; position: absolute; inset: 12%; border-radius: 50%; border: 2px solid var(--accent);
+                          animation: hold var(--hold, 300ms) linear forwards; }
+  @keyframes hold { from { transform: scale(0.2); opacity: 0.4; } to { transform: scale(1); opacity: 1; } }
   .cell.emine::after { content: ""; width: 48%; height: 48%; border-radius: 50%; background: var(--ink); }
   .numform { display: flex; gap: 6px; padding: 4px 8px 2px; align-items: center; }
   .numform input { width: 86px; padding: 4px 6px; border: 1px solid var(--open-line); border-radius: 6px; background: var(--open); color: var(--ink); font: 700 12px var(--font-num); }
@@ -201,6 +225,7 @@
   .intro p { margin: 0; font-size: 13.5px; line-height: 1.55; }
   .intro .btn { flex: none; }
   .numerr { margin: 0; padding: 0 8px; color: var(--boom); font-size: 11.5px; }
+  .numhelp { margin: 0; padding: 0 8px; color: var(--muted); font-size: 11.5px; line-height: 1.45; }
   .editbar { display: grid; gap: 8px; justify-items: center; width: min(100%, 560px); }
   .editbar .row2 { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; }
   .editbar .btn { font: 600 12.5px var(--font-ui); padding: 6px 12px; }
@@ -250,6 +275,8 @@
     <span id="t-game">게임</span>
     <button class="mi" type="button" id="newGame"><span id="t-new">새 게임</span><kbd>N</kbd></button>
     <button class="mi" type="button" id="restart"><span id="t-restart">게임 재시작</span><kbd>R</kbd></button>
+    <button class="mi" type="button" id="pauseBtn" aria-pressed="false"><span id="t-pause">일시정지</span><kbd>P</kbd></button>
+    <button class="mi" type="button" id="dailyBtn" aria-pressed="false"><span id="t-daily">오늘의 판</span></button>
   </div>
 
   <div class="group" id="levels">
@@ -298,6 +325,7 @@
       <input id="numIn" type="number" min="1" max="999999" inputmode="numeric" aria-labelledby="t-byNumber">
       <button type="submit" id="t-numGo">시작</button>
     </form>
+    <p class="numhelp" id="numHelp" hidden></p>
     <p class="numerr" id="numErr" hidden></p>
     <button class="mi" type="button" id="editorBtn"><span id="t-editor">판 편집기</span></button>
   </div>
@@ -331,8 +359,18 @@
       <dt id="t-mode">모드:</dt><dd id="modeLabel"></dd><span class="gap"></span><dt class="r" id="t-minesLeft">남은 지뢰 수:</dt><dd class="r" id="minesLeft">0</dd>
       <dt id="t-gameNo">게임 번호:</dt><dd id="gameNo"></dd><span class="gap"></span><dt class="r" id="t-cellsLeft">남은 칸 수:</dt><dd class="r" id="cellsLeft">0</dd>
     </dl>
+    <div class="touchmode" id="touchMode" role="group">
+      <button type="button" data-tm="open" aria-pressed="true"></button>
+      <button type="button" data-tm="flag" aria-pressed="false"></button>
+    </div>
+    <div class="holdset" id="holdSet" role="group"><span id="t-hold"></span>
+      <button type="button" data-hold="0"></button><button type="button" data-hold="200">0.2s</button>
+      <button type="button" data-hold="300">0.3s</button><button type="button" data-hold="500">0.5s</button>
+    </div>
     <div class="board" id="board" role="grid"></div>
     <p class="status" id="status" aria-live="polite"></p>
+    <p class="wstats" id="winStats" hidden></p>
+    <button class="btn statusact" type="button" id="statusAct" hidden></button>
     <p class="controls" id="t-controls"></p>
     <div class="editbar" id="editBar" hidden>
       <p class="help" id="t-editHelp"></p>
@@ -355,16 +393,16 @@
 
 <article class="about" id="about" lang="en">
   <h1>Minesweeper Online</h1>
-  <p>MINE:D is a free Minesweeper game you play right in your browser, no install needed.<br>Your first click is always safe, and there are 7 difficulty levels, from Beginner up to God: an 80×50 board hiding 760 mines.</p>
+  <p>MINE:D is a free Minesweeper game you play right in your browser, no install needed.<br>Your first click is safe (except in Pure random mode and on built or shared boards), and there are 7 difficulty levels, from Beginner up to God: an 80×50 board hiding 760 mines.</p>
   <h2>How to play</h2>
   <ul><li>Click a cell to open it. A number shows how many mines touch that cell's 8 neighbors.</li><li>Put a flag on a cell you think is a mine with the space bar or a right-click.</li><li>Once a number has that many flags around it, click the number or press space to open all its other neighbors at once.</li><li>Open every cell without a mine to win. Stuck? Press H for a hint that marks a safe cell.</li></ul>
   <h2>Difficulty levels</h2>
   <table><tr><th>Level</th><th>Board</th><th>Mines</th></tr><tr><td>Beginner</td><td>9×9</td><td>10</td></tr><tr><td>Intermediate</td><td>16×16</td><td>40</td></tr><tr><td>Expert</td><td>30×16</td><td>99</td></tr><tr><td>Not Human</td><td>40×25</td><td>200</td></tr><tr><td>Superman</td><td>50×32</td><td>320</td></tr><tr><td>Alien</td><td>64×40</td><td>512</td></tr><tr><td>God</td><td>80×50</td><td>760</td></tr></table>
   <h2>Keyboard shortcuts</h2>
-  <p>N new game · R replay this board · H hint · S statistics · +/− zoom</p>
+  <p>N·F2 new game · R replay this board · P pause · H hint · S statistics · +/− zoom</p>
   <footer>© MINE:D · Records and statistics are saved only in this browser.</footer>
 </article>
-<script type="application/json" id="about-data">{"en": {"h1": "Minesweeper Online", "intro": "MINE:D is a free Minesweeper game you play right in your browser, no install needed.<br>Your first click is always safe, and there are 7 difficulty levels, from Beginner up to God: an 80×50 board hiding 760 mines.", "how": "How to play", "steps": ["Click a cell to open it. A number shows how many mines touch that cell's 8 neighbors.", "Put a flag on a cell you think is a mine with the space bar or a right-click.", "Once a number has that many flags around it, click the number or press space to open all its other neighbors at once.", "Open every cell without a mine to win. Stuck? Press H for a hint that marks a safe cell."], "levels": "Difficulty levels", "cols": ["Level", "Board", "Mines"], "keys": "Keyboard shortcuts", "keyLine": "N new game · R replay this board · H hint · S statistics · +/− zoom", "foot": "© MINE:D · Records and statistics are saved only in this browser.", "lv": {"beginner": "Beginner", "intermediate": "Intermediate", "expert": "Expert", "nothuman": "Not Human", "superman": "Superman", "alien": "Alien", "god": "God"}}, "ja": {"h1": "マインスイーパー オンライン", "intro": "MINE:D はインストール不要、ブラウザですぐ遊べる無料のマインスイーパーです。<br>最初のクリックは必ず安全。初級から、80×50 マスに地雷 760 個が潜む「神」まで 7 段階の難易度に挑戦できます。", "how": "遊び方", "steps": ["マスをクリックして開きます。数字は周囲 8 マスにある地雷の数です。", "地雷だと思うマスには、スペースキーか右クリックで旗を立てます。", "数字と同じ数の旗を立てたら、その数字をクリックするかスペースキーで周りを一度に開けます。", "地雷のないマスをすべて開けば勝ちです。迷ったらヒント(H)で安全なマスを確認できます。"], "levels": "難易度", "cols": ["難易度", "盤面", "地雷"], "keys": "ショートカット", "keyLine": "N 新しいゲーム · R 同じ盤面をリスタート · H ヒント · S 統計 · +/− 拡大・縮小", "foot": "© MINE:D · 記録と統計はこのブラウザにのみ保存されます。", "lv": {"beginner": "初級", "intermediate": "中級", "expert": "上級", "nothuman": "ノットヒューマン", "superman": "スーパーマン", "alien": "エイリアン", "god": "神"}}, "zh": {"h1": "在线扫雷", "intro": "MINE:D 是一款无需安装、在浏览器中直接玩的免费扫雷游戏。<br>第一次点击永远安全,共有 7 个难度,从初级一直到在 80×50 格中藏着 760 颗地雷的「神」级。", "how": "玩法", "steps": ["点击格子将其打开。数字表示周围 8 格中地雷的数量。", "在你认为是地雷的格子上按空格键或右键插旗。", "当某个数字周围的旗子数与数字相同时,点击该数字或按空格键即可一次打开周围的其余格子。", "打开所有没有地雷的格子即获胜。卡住时可按 H 获取提示,查看一个安全的格子。"], "levels": "难度", "cols": ["难度", "棋盘", "地雷"], "keys": "快捷键", "keyLine": "N 新游戏 · R 重玩同一局 · H 提示 · S 统计 · +/− 缩放", "foot": "© MINE:D · 记录和统计只保存在此浏览器中。", "lv": {"beginner": "初级", "intermediate": "中级", "expert": "高级", "nothuman": "非人类", "superman": "超人", "alien": "外星人", "god": "神"}}}</script>
+<script type="application/json" id="about-data">{"en": {"h1": "Minesweeper Online", "intro": "MINE:D is a free Minesweeper game you play right in your browser, no install needed.<br>Your first click is safe (except in Pure random mode and on built or shared boards), and there are 7 difficulty levels, from Beginner up to God: an 80×50 board hiding 760 mines.", "how": "How to play", "steps": ["Click a cell to open it. A number shows how many mines touch that cell's 8 neighbors.", "Put a flag on a cell you think is a mine with the space bar or a right-click.", "Once a number has that many flags around it, click the number or press space to open all its other neighbors at once.", "Open every cell without a mine to win. Stuck? Press H for a hint that marks a safe cell."], "levels": "Difficulty levels", "cols": ["Level", "Board", "Mines"], "keys": "Keyboard shortcuts", "keyLine": "N·F2 new game · R replay this board · P pause · H hint · S statistics · +/− zoom", "foot": "© MINE:D · Records and statistics are saved only in this browser.", "lv": {"beginner": "Beginner", "intermediate": "Intermediate", "expert": "Expert", "nothuman": "Not Human", "superman": "Superman", "alien": "Alien", "god": "God"}}, "ja": {"h1": "マインスイーパー オンライン", "intro": "MINE:D はインストール不要、ブラウザですぐ遊べる無料のマインスイーパーです。<br>最初のクリックは安全です(完全ランダムモードと作成・共有した盤面を除く)。初級から、80×50 マスに地雷 760 個が潜む「神」まで 7 段階の難易度に挑戦できます。", "how": "遊び方", "steps": ["マスをクリックして開きます。数字は周囲 8 マスにある地雷の数です。", "地雷だと思うマスには、スペースキーか右クリックで旗を立てます。", "数字と同じ数の旗を立てたら、その数字をクリックするかスペースキーで周りを一度に開けます。", "地雷のないマスをすべて開けば勝ちです。迷ったらヒント(H)で安全なマスを確認できます。"], "levels": "難易度", "cols": ["難易度", "盤面", "地雷"], "keys": "ショートカット", "keyLine": "N·F2 新しいゲーム · R 同じ盤面をリスタート · P 一時停止 · H ヒント · S 統計 · +/− 拡大・縮小", "foot": "© MINE:D · 記録と統計はこのブラウザにのみ保存されます。", "lv": {"beginner": "初級", "intermediate": "中級", "expert": "上級", "nothuman": "ノットヒューマン", "superman": "スーパーマン", "alien": "エイリアン", "god": "神"}}, "zh": {"h1": "在线扫雷", "intro": "MINE:D 是一款无需安装、在浏览器中直接玩的免费扫雷游戏。<br>第一次点击是安全的(完全随机模式和自制、分享的棋盘除外),共有 7 个难度,从初级一直到在 80×50 格中藏着 760 颗地雷的「神」级。", "how": "玩法", "steps": ["点击格子将其打开。数字表示周围 8 格中地雷的数量。", "在你认为是地雷的格子上按空格键或右键插旗。", "当某个数字周围的旗子数与数字相同时,点击该数字或按空格键即可一次打开周围的其余格子。", "打开所有没有地雷的格子即获胜。卡住时可按 H 获取提示,查看一个安全的格子。"], "levels": "难度", "cols": ["难度", "棋盘", "地雷"], "keys": "快捷键", "keyLine": "N·F2 新游戏 · R 重玩同一局 · P 暂停 · H 提示 · S 统计 · +/− 缩放", "foot": "© MINE:D · 记录和统计只保存在此浏览器中。", "lv": {"beginner": "初级", "intermediate": "中级", "expert": "高级", "nothuman": "非人类", "superman": "超人", "alien": "外星人", "god": "神"}}}</script>
 
 <div class="scrim" id="statsDlg" hidden>
   <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="t-statsTitle">
@@ -403,15 +441,29 @@
       diff: "난이도", mode: "모드", modeVal: "첫 시도 보장", gameNo: "게임 번호", minesLeft: "남은 지뢰 수", cellsLeft: "남은 칸 수",
       w: "가로", h: "세로", m: "지뢰", start: "시작",
       lv: { beginner: "초급", intermediate: "중급", expert: "고급", nothuman: "낫휴먼", superman: "슈퍼맨", alien: "에일리언", god: "신", custom: "사용자 지정" },
-      controls: "클릭: 열기 · 닫힌 칸에 스페이스바(오른쪽 클릭): 깃발 · 열린 숫자에 스페이스바(클릭): 주변 열기",
+      controls: "클릭: 열기 · 닫힌 칸에 스페이스바(오른쪽 클릭): 깃발 · 열린 숫자에 스페이스바(클릭·양쪽 버튼): 주변 열기 · P: 일시정지",
       lose: "지뢰를 밟았어요. R로 같은 판을 다시 하거나 N으로 새 게임을 시작하세요.",
       win: t => `클리어! ${t}`, winRecord: t => `클리어! ${t}, 새 최고 기록이에요.`, winHinted: t => `클리어! ${t} (힌트를 써서 기록에는 남지 않아요)`,
       firstSafe: "첫 칸은 어디를 눌러도 안전해요.", hintShown: "초록색으로 반짝인 칸은 안전해요.", noHint: "열 수 있는 안전한 칸이 없어요.",
-      gmode: "게임 모드", gm: { random: "완전 랜덤", safe: "첫 시도 보장", noguess: "추측 불필요" }, generating: "추측 없이 풀리는 판을 만드는 중…", firstRandom: "완전 랜덤 모드라 첫 칸도 지뢰일 수 있어요.", hintSafe: "초록색으로 반짝인 칸은 숫자로 보아 확실히 안전해요.", hintMine: "빨갛게 반짝인 칸은 숫자로 보아 확실히 지뢰예요. 깃발을 꽂으세요.", hintWrongFlag: "반짝인 칸은 안전한데 깃발이 꽂혀 있어요. 깃발을 빼 보세요.", noLogic: "지금은 숫자만으로 확실한 칸이 없어요. 추측이 필요한 상황이에요.", byNumber: "번호로 시작", numErr: "1~999999 사이의 숫자를 입력하세요.", editor: "판 편집기", editHelp: "칸을 클릭하거나 스페이스바를 눌러 지뢰를 놓고 뺍니다. 판 크기는 난이도 메뉴에서 고르세요.", editCount: n => `지뢰 <b>${n}</b>개`, editClear: "비우기", editPlay: "이 판으로 플레이", editCopy: "공유 코드 복사", editCopyLink: "공유 링크 복사", editCopied: "복사했어요. 친구에게 보내 보세요!", editCopyFail: "복사하지 못했어요. 아래 칸의 내용을 직접 복사하세요.", editExit: "편집 끝내기", editLoad: "불러오기", editLoadPh: "공유 코드나 링크 붙여 넣기", editBad: "코드를 읽을 수 없어요. 다시 확인해 주세요.", editLoaded: "판을 불러왔어요.", editNeed: "지뢰를 1개 이상 놓고, 빈칸도 1칸 이상 남겨 주세요.", editedBoard: "편집한 판", edited: "편집한 판", sharedBoard: "공유받은 판이에요. 첫 클릭 보장이 없으니 조심하세요!", tools: "도구", introText: "처음 오셨나요? 칸을 클릭하면 열리고, 스페이스바나 오른쪽 클릭으로 깃발을 꽂아요. 숫자 위에서 스페이스바를 누르면 주변이 한 번에 열려요. 난이도와 모드는 왼쪽 메뉴에서 고를 수 있어요.", introOk: "알겠어요", tip: { lv: { beginner: "처음이라면 여기서 시작하세요", intermediate: "익숙해졌다면 다음 단계", expert: "고전 지뢰찾기의 최고 난이도", nothuman: "여기서부터 고급보다 큰 판", superman: "더 넓은 판, 집중력이 필요해요", alien: "긴 승부를 각오하세요", god: "가장 큰 판", custom: "가로·세로·지뢰 수를 직접 정해요" }, gm: { random: "첫 클릭에서도 지뢰를 밟을 수 있는 고전 방식", safe: "첫 클릭한 칸과 주변 8칸에는 지뢰가 없어요", noguess: "숫자만으로 항상 끝까지 풀 수 있는 판만 나와요. 찍을 필요가 없어요" }, fit: "판을 화면 크기에 맞춰요", byNumber: "같은 번호로 친구와 같은 판을 할 수 있어요", editor: "지뢰를 직접 놓아 판을 만들고 링크로 공유해요", hint: "숫자로 확실히 알 수 있는 칸을 알려 줘요 (기록에는 안 남아요)", stats: "난이도별 플레이 수·승률·최고 기록" }, restartNone: "아직 시작하지 않은 판이에요.", restarted: "같은 판을 처음부터 다시 해요.",
+      gmode: "게임 모드", gm: { random: "완전 랜덤", safe: "첫 시도 보장", noguess: "추측 불필요" }, generating: "추측 없이 풀리는 판을 만드는 중…", firstRandom: "완전 랜덤 모드라 첫 칸도 지뢰일 수 있어요.", hintSafe: "초록색으로 반짝인 칸은 숫자로 보아 확실히 안전해요.", hintMine: "빨갛게 반짝인 칸은 숫자로 보아 확실히 지뢰예요. 깃발을 꽂으세요.", hintWrongFlag: "반짝인 칸은 안전한데 깃발이 꽂혀 있어요. 깃발을 빼 보세요.", noLogic: "지금은 숫자로 확실히 알 수 있는 칸이 하나도 없어요. 추측이 꼭 필요한 상황이에요.", byNumber: "번호로 시작", numErr: "1~999999 사이의 숫자를 입력하세요.", editor: "판 편집기", editHelp: "칸을 클릭하거나 스페이스바를 눌러 지뢰를 놓고 뺍니다. 판 크기는 난이도 메뉴에서 고르세요.", editCount: n => `지뢰 <b>${n}</b>개`, editClear: "비우기", editPlay: "이 판으로 플레이", editCopy: "공유 코드 복사", editCopyLink: "공유 링크 복사", editCopied: "복사했어요. 친구에게 보내 보세요!", editCopyFail: "복사하지 못했어요. 아래 칸의 내용을 직접 복사하세요.", editExit: "편집 끝내기", editLoad: "불러오기", editLoadPh: "공유 코드나 링크 붙여 넣기", editBad: "코드를 읽을 수 없어요. 다시 확인해 주세요.", editLoaded: "판을 불러왔어요.", editNeed: "지뢰를 1개 이상 놓고, 빈칸도 1칸 이상 남겨 주세요.", editedBoard: "편집한 판", edited: "편집한 판", sharedBoard: "공유받은 판이에요. 첫 클릭 보장이 없으니 조심하세요!", tools: "도구", introText: "처음 오셨나요? 칸을 클릭하면 열리고, 스페이스바나 오른쪽 클릭으로 깃발을 꽂아요. 숫자 위에서 스페이스바를 누르면 주변이 한 번에 열려요. 난이도와 모드는 왼쪽 메뉴에서 고를 수 있어요.", introOk: "알겠어요", tip: { lv: { beginner: "처음이라면 여기서 시작하세요", intermediate: "익숙해졌다면 다음 단계", expert: "고전 지뢰찾기의 최고 난이도", nothuman: "여기서부터 고급보다 큰 판", superman: "더 넓은 판, 집중력이 필요해요", alien: "긴 승부를 각오하세요", god: "가장 큰 판", custom: "가로·세로·지뢰 수를 직접 정해요" }, gm: { random: "첫 클릭에서도 지뢰를 밟을 수 있는 고전 방식", safe: "첫 클릭한 칸과 주변 8칸에는 지뢰가 없어요. 지뢰가 아주 많은 사용자 지정 판에서는 클릭한 칸만 보호해요", noguess: "숫자만으로 항상 끝까지 풀 수 있는 판만 나와요. 찍을 필요가 없어요" }, fit: "판을 화면 크기에 맞춰요", byNumber: "같은 번호로 친구와 같은 판을 할 수 있어요 (난이도·모드·첫 칸 위치도 같아야 해요)", editor: "지뢰를 직접 놓아 판을 만들고 링크로 공유해요 (첫 클릭 보호는 없어요)", hint: "숫자로 확실히 알 수 있는 칸을 알려 줘요 (기록에는 안 남아요)", stats: "난이도별 플레이 수·승률·최고 기록" }, restartNone: "아직 시작하지 않은 판이에요.", restarted: "같은 판을 처음부터 다시 해요. 이 판은 첫 칸 보호가 없으니 조심하세요.",
       errW: "가로는 5~100 사이로 입력하세요.", errH: "세로는 5~60 사이로 입력하세요.", errM: n => `지뢰는 1~${n}개 사이로 입력하세요.`,
-      statsTitle: "통계", cols: ["난이도", "플레이", "승리", "승률", "최고 기록", "총 플레이 시간"], close: "닫기", reset: "초기화",
+      statsTitle: "통계", cols: ["난이도", "플레이", "승리", "승률", "최고 기록", "최고 3BV/s", "총 플레이 시간"], close: "닫기", reset: "초기화",
       fb: "피드백", fbPh: "개선할 점이나 버그를 적어 주세요", fbSend: "보내기", fbSending: "보내는 중…", fbSent: "보냈어요. 고마워요!", fbEmpty: "내용을 입력해 주세요.", fbDenied: "이 보기 권한으로는 피드백을 보낼 수 없어요.", fbOff: "claude.ai에서 열었을 때만 피드백을 보낼 수 있어요.", fbFail: "보내지 못했어요. 잠시 후 다시 시도해 주세요.", fbFull: "피드백 저장 공간이 가득 찼어요.", fbInbox: "받은 피드백", fbNone: "아직 받은 피드백이 없어요.", someone: "누군가", 
-      resetAsk: "모든 통계를 지울까요?", resetYes: "지우기", sec: s => `${s}초`,
+      resetAsk: "모든 통계를 지울까요? 지금 하는 게임도 기록되지 않아요.", resetYes: "지우기", sec: s => `${s}초`,
+      restartedFirst: "같은 판을 다시 시작해요. 첫 칸의 안전을 지키려고 처음 연 칸을 다시 열어 두었어요.", restartTip: "같은 지뢰 배치로 다시 해요. 첫 시도 보장·추측 불필요 모드에서는 처음 연 칸이 열린 채로 시작해요",
+      controlsTouch: "탭: 열기 · 길게 누르기(또는 깃발 모드): 깃발 · 열린 숫자 탭: 주변 열기",
+      pause: "일시정지", pausedMsg: "일시정지했어요. 판을 누르거나 P를 누르면 이어서 해요.", pauseCover: "일시정지 · 누르면 계속",
+      daily: "오늘의 판", dailyReady: d => `${d} 오늘의 판이에요. 모두가 같은 판을 해요. 가운데가 열린 채로 시작하고, 첫 동작부터 시간이 흘러요.`, dailyBest: x => `오늘 최고 기록 ${x}. 다시 도전해 보세요.`,
+      dailyShare: "결과 공유", dailyCopied: "결과를 복사했어요. 붙여 넣어 공유해 보세요.", dailyShareText: (d, t, b) => `MINE:D 오늘의 판 ${d}\n⏱ ${t} · 3BV/s ${b}`,
+      winStats: (b, bps, c, e) => `3BV ${b} · 3BV/s ${bps} · 클릭 ${c} · 효율 ${e}`, hold: "길게 눌러 깃발", holdOff: "끔",
+      tipX: { pause: "시간을 멈추고 판을 가려요 (P)", daily: "날마다 바뀌는, 모두에게 같은 추측 불필요 판 (30×16·99)", hold: "터치로 칸을 이 시간만큼 누르고 있으면 깃발을 꽂아요" },
+      hintChecking: "확실한 칸을 찾는 중…",
+      noLogicUnsure: "힌트가 확실한 칸을 찾지 못했어요. 판이 복잡해서 추측이 꼭 필요한지는 확인하지 못했어요.",
+      genTimeout: "제한 시간 안에 추측 없이 풀리는 판을 찾지 못해 게임을 시작하지 않았어요. 다시 시도하거나 다른 칸을 눌러 보세요.", genError: "판을 만드는 중 문제가 생겨 게임을 시작하지 않았어요. 다시 시도해 주세요.", genCanceled: "판 만들기를 취소했어요. 칸을 누르면 다시 만들어요.", genCancel: "취소", genRetry: "새 번호로 다시 시도",
+      denseFirst: "지뢰가 많아 이번 판은 처음 누른 칸만 보호했어요. 주변 칸에는 지뢰가 있을 수 있어요.", editedNote: "편집한 판은 첫 클릭 보호가 없어요.",
+      numHelp: "같은 판이 나오려면 난이도(사용자 지정은 가로·세로·지뢰 수)와 게임 모드가 같고, 첫 칸도 같은 위치를 눌러야 해요. 완전 랜덤 모드는 첫 칸 위치와 상관없어요.",
+      tm: { open: "열기", flag: "깃발", label: "터치 동작" }, board: "지뢰판",
+      cs: { closed: "닫힘", flag: "깃발", empty: "빈 칸", num: n => `숫자 ${n}`, mine: "지뢰", boom: "밟은 지뢰", wrong: "잘못된 깃발" }, cellName: (r, c, s) => `${r}행 ${c}열, ${s}`,
     },
     en: {
       title: "Minesweeper", modeLight: "Light", modeDark: "Dark", game: "Game", new: "New game", restart: "Restart", level: "Difficulty", view: "View", fit: "Fit",
@@ -419,15 +471,29 @@
       diff: "Difficulty", mode: "Mode", modeVal: "Safe first click", gameNo: "Game no.", minesLeft: "Mines left", cellsLeft: "Cells left",
       w: "Width", h: "Height", m: "Mines", start: "Start",
       lv: { beginner: "Beginner", intermediate: "Intermediate", expert: "Expert", nothuman: "Not Human", superman: "Superman", alien: "Alien", god: "God", custom: "Custom" },
-      controls: "Click: open · Space (right-click) on a closed cell: flag · Space (click) on a number: open around it",
+      controls: "Click: open · Space (right-click) on a closed cell: flag · Space (click, both buttons) on a number: open around it · P: pause",
       lose: "You hit a mine. Press R to replay this board or N for a new game.",
       win: t => `Cleared in ${t}!`, winRecord: t => `Cleared in ${t}! New best time.`, winHinted: t => `Cleared in ${t}! (Hints used, so it isn't recorded.)`,
       firstSafe: "Your first click is always safe.", hintShown: "The cell flashing green is safe.", noHint: "There are no safe cells left to open.",
-      gmode: "Game mode", gm: { random: "Pure random", safe: "Safe first click", noguess: "No guessing" }, generating: "Building a board you can solve without guessing…", firstRandom: "Pure random mode: even your first click can hit a mine.", hintSafe: "The cell flashing green is certainly safe from the numbers.", hintMine: "The cell flashing red is certainly a mine from the numbers. Flag it.", hintWrongFlag: "The flashing cell is safe, but it has a flag on it. Try removing the flag.", noLogic: "No cell is certain from the numbers right now. This spot needs a guess.", byNumber: "Start by number", numErr: "Enter a number from 1 to 999999.", editor: "Board editor", editHelp: "Click a cell or press space to add or remove a mine. Pick the board size from the difficulty menu.", editCount: n => `<b>${n}</b> mines`, editClear: "Clear", editPlay: "Play this board", editCopy: "Copy share code", editCopyLink: "Copy share link", editCopied: "Copied. Send it to a friend!", editCopyFail: "Couldn’t copy. Copy the text in the box below instead.", editExit: "Close editor", editLoad: "Load", editLoadPh: "Paste a share code or link", editBad: "That code can’t be read. Check it and try again.", editLoaded: "Board loaded.", editNeed: "Place at least one mine and leave at least one empty cell.", editedBoard: "Custom-built board", edited: "Built board", sharedBoard: "This is a shared board. There’s no safe first click, so be careful!", tools: "Tools", introText: "New here? Click a cell to open it, and press space or right-click to flag a mine. Press space on a number to open everything around it. Pick a level and mode from the menu on the left.", introOk: "Got it", tip: { lv: { beginner: "Start here if you’re new", intermediate: "The next step once you’re comfortable", expert: "The hardest classic level", nothuman: "Bigger than Expert from here on", superman: "A wider board that needs focus", alien: "Settle in for a long game", god: "The biggest board", custom: "Set your own width, height and mines" }, gm: { random: "Classic: even your first click can hit a mine", safe: "No mines in your first cell or the 8 around it", noguess: "Every board can be solved from the numbers alone. No guessing needed" }, fit: "Fit the board to the window", byNumber: "Play the same board as a friend by using the same number", editor: "Place mines yourself and share the board by link", hint: "Shows a cell the numbers prove (that game won’t count as a record)", stats: "Games, win rate and best times by level" }, restartNone: "This board hasn't started yet.", restarted: "Replaying the same board from the start.",
+      gmode: "Game mode", gm: { random: "Pure random", safe: "Safe first click", noguess: "No guessing" }, generating: "Building a board you can solve without guessing…", firstRandom: "Pure random mode: even your first click can hit a mine.", hintSafe: "The cell flashing green is certainly safe from the numbers.", hintMine: "The cell flashing red is certainly a mine from the numbers. Flag it.", hintWrongFlag: "The flashing cell is safe, but it has a flag on it. Try removing the flag.", noLogic: "No cell is certain from the numbers right now, so this spot needs a guess.", byNumber: "Start by number", numErr: "Enter a number from 1 to 999999.", editor: "Board editor", editHelp: "Click a cell or press space to add or remove a mine. Pick the board size from the difficulty menu.", editCount: n => `<b>${n}</b> mines`, editClear: "Clear", editPlay: "Play this board", editCopy: "Copy share code", editCopyLink: "Copy share link", editCopied: "Copied. Send it to a friend!", editCopyFail: "Couldn’t copy. Copy the text in the box below instead.", editExit: "Close editor", editLoad: "Load", editLoadPh: "Paste a share code or link", editBad: "That code can’t be read. Check it and try again.", editLoaded: "Board loaded.", editNeed: "Place at least one mine and leave at least one empty cell.", editedBoard: "Custom-built board", edited: "Built board", sharedBoard: "This is a shared board. There’s no safe first click, so be careful!", tools: "Tools", introText: "New here? Click a cell to open it, and press space or right-click to flag a mine. Press space on a number to open everything around it. Pick a level and mode from the menu on the left.", introOk: "Got it", tip: { lv: { beginner: "Start here if you’re new", intermediate: "The next step once you’re comfortable", expert: "The hardest classic level", nothuman: "Bigger than Expert from here on", superman: "A wider board that needs focus", alien: "Settle in for a long game", god: "The biggest board", custom: "Set your own width, height and mines" }, gm: { random: "Classic: even your first click can hit a mine", safe: "No mines in your first cell or the 8 around it (only the cell itself on very crowded custom boards)", noguess: "Every board can be solved from the numbers alone. No guessing needed" }, fit: "Fit the board to the window", byNumber: "Play the same board as a friend by using the same number (same level, mode and first cell)", editor: "Place mines yourself and share the board by link (no safe first click)", hint: "Shows a cell the numbers prove (that game won’t count as a record)", stats: "Games, win rate and best times by level" }, restartNone: "This board hasn't started yet.", restarted: "Replaying the same board from the start. This board has no safe first click, so be careful.",
       errW: "Width must be 5–100.", errH: "Height must be 5–60.", errM: n => `Mines must be 1–${n}.`,
-      statsTitle: "Statistics", cols: ["Difficulty", "Played", "Won", "Win rate", "Best time", "Total play time"], close: "Close", reset: "Reset",
+      statsTitle: "Statistics", cols: ["Difficulty", "Played", "Won", "Win rate", "Best time", "Best 3BV/s", "Total play time"], close: "Close", reset: "Reset",
       fb: "Feedback", fbPh: "Ideas or bugs you noticed", fbSend: "Send", fbSending: "Sending…", fbSent: "Sent. Thank you!", fbEmpty: "Type something first.", fbDenied: "Your access level can’t send feedback here.", fbOff: "Feedback works when this page is opened on claude.ai.", fbFail: "Couldn’t send. Try again in a moment.", fbFull: "Feedback storage is full.", fbInbox: "Feedback received", fbNone: "No feedback yet.", someone: "Someone", 
-      resetAsk: "Clear all statistics?", resetYes: "Clear", sec: s => `${s}s`,
+      resetAsk: "Clear all statistics? The game in progress won’t be recorded either.", resetYes: "Clear", sec: s => `${s}s`,
+      restartedFirst: "Replaying the same board. Your first cell is open again, so the start stays safe.", restartTip: "Play the same mine layout again. In Safe first click and No guessing modes, your first cell starts open",
+      controlsTouch: "Tap: open · Hold (or flag mode): flag · Tap a number: open around it",
+      pause: "Pause", pausedMsg: "Paused. Click the board or press P to continue.", pauseCover: "Paused · click to continue",
+      daily: "Daily board", dailyReady: d => `Daily board for ${d}: everyone plays the same board. It starts with the center open, and the clock runs from your first move.`, dailyBest: x => `Today’s best: ${x}. Try to beat it.`,
+      dailyShare: "Share result", dailyCopied: "Result copied. Paste it anywhere to share.", dailyShareText: (d, t, b) => `MINE:D daily ${d}\n⏱ ${t} · 3BV/s ${b}`,
+      winStats: (b, bps, c, e) => `3BV ${b} · 3BV/s ${bps} · ${c} clicks · efficiency ${e}`, hold: "Hold to flag", holdOff: "Off",
+      tipX: { pause: "Stop the clock and hide the board (P)", daily: "A new no-guess board every day, the same for everyone (30×16·99)", hold: "Hold a cell this long on a touch screen to flag it" },
+      hintChecking: "Looking for a cell the numbers prove…",
+      noLogicUnsure: "The hint couldn’t find a certain cell. This position is too complex to confirm whether a guess is really needed.",
+      genTimeout: "Couldn’t find a board you can solve without guessing in time, so the game didn’t start. Try again or click a different cell.", genError: "Something went wrong while building the board, so the game didn’t start. Please try again.", genCanceled: "Board building canceled. Click a cell to build one again.", genCancel: "Cancel", genRetry: "Try again with a new number",
+      denseFirst: "This board is crowded with mines, so only the cell you clicked was kept safe. Its neighbors may hold mines.", editedNote: "Built boards have no safe first click.",
+      numHelp: "To get the same board, use the same level (for Custom: width, height and mines), the same game mode, and click the same first cell. In Pure random mode the first cell doesn’t matter.",
+      tm: { open: "Open", flag: "Flag", label: "Tap action" }, board: "Minefield",
+      cs: { closed: "closed", flag: "flagged", empty: "empty", num: n => `${n}`, mine: "mine", boom: "exploded mine", wrong: "wrong flag" }, cellName: (r, c, s) => `Row ${r}, column ${c}: ${s}`,
     },
     ja: {
       title: "マインスイーパー", modeLight: "ライト", modeDark: "ダーク", game: "ゲーム", new: "新しいゲーム", restart: "リスタート", level: "難易度", view: "表示", fit: "全体",
@@ -435,15 +501,29 @@
       diff: "難易度", mode: "モード", modeVal: "初手保証", gameNo: "ゲーム番号", minesLeft: "残り地雷数", cellsLeft: "残りマス数",
       w: "幅", h: "高さ", m: "地雷", start: "開始",
       lv: { beginner: "初級", intermediate: "中級", expert: "上級", nothuman: "ノットヒューマン", superman: "スーパーマン", alien: "エイリアン", god: "神", custom: "カスタム" },
-      controls: "クリック: 開く · 閉じたマスでスペース(右クリック): 旗 · 開いた数字でスペース(クリック): 周囲を開く",
+      controls: "クリック: 開く · 閉じたマスでスペース(右クリック): 旗 · 開いた数字でスペース(クリック・両ボタン): 周囲を開く · P: 一時停止",
       lose: "地雷を踏みました。Rで同じ盤面をもう一度、Nで新しいゲームを始めます。",
       win: t => `クリア! ${t}`, winRecord: t => `クリア! ${t}、自己ベスト更新です。`, winHinted: t => `クリア! ${t}(ヒント使用のため記録されません)`,
       firstSafe: "最初のクリックはどこでも安全です。", hintShown: "緑に光ったマスは安全です。", noHint: "開けられる安全なマスがありません。",
-      gmode: "ゲームモード", gm: { random: "完全ランダム", safe: "初手保証", noguess: "推測不要" }, generating: "推測なしで解ける盤面を作成中…", firstRandom: "完全ランダムモードでは最初のマスも地雷の可能性があります。", hintSafe: "緑に光ったマスは数字から確実に安全です。", hintMine: "赤く光ったマスは数字から確実に地雷です。旗を立てましょう。", hintWrongFlag: "光ったマスは安全ですが旗が立っています。旗を外してみてください。", noLogic: "今は数字だけで確定できるマスがありません。推測が必要な局面です。", byNumber: "番号で開始", numErr: "1〜999999 の数字を入力してください。", editor: "盤面エディタ", editHelp: "マスをクリックするかスペースキーで地雷を置いたり外したりします。盤面の大きさは難易度メニューで選びます。", editCount: n => `地雷 <b>${n}</b> 個`, editClear: "クリア", editPlay: "この盤面で遊ぶ", editCopy: "共有コードをコピー", editCopyLink: "共有リンクをコピー", editCopied: "コピーしました。友だちに送ってみましょう!", editCopyFail: "コピーできませんでした。下の欄の内容を直接コピーしてください。", editExit: "編集を終了", editLoad: "読み込む", editLoadPh: "共有コードかリンクを貼り付け", editBad: "コードを読み取れません。もう一度確認してください。", editLoaded: "盤面を読み込みました。", editNeed: "地雷を 1 個以上置き、空きマスも 1 つ以上残してください。", editedBoard: "作成した盤面", edited: "作成した盤面", sharedBoard: "共有された盤面です。初手保証がないので気をつけて!", tools: "ツール", introText: "はじめてですか?マスをクリックすると開き、スペースキーか右クリックで旗を立てます。数字の上でスペースキーを押すと周りが一度に開きます。難易度とモードは左のメニューで選べます。", introOk: "わかった", tip: { lv: { beginner: "初めてならここから", intermediate: "慣れてきたら次の段階", expert: "クラシックの最高難度", nothuman: "ここから上級より大きな盤面", superman: "広い盤面、集中力が必要", alien: "長期戦を覚悟して", god: "最大の盤面", custom: "幅・高さ・地雷数を自分で決めます" }, gm: { random: "最初のクリックでも地雷を踏むことがある従来の方式", safe: "最初にクリックしたマスと周りの8マスには地雷がありません", noguess: "数字だけで必ず最後まで解ける盤面だけが出ます。推測は不要です" }, fit: "盤面を画面に合わせます", byNumber: "同じ番号で友だちと同じ盤面を遊べます", editor: "地雷を自分で置いて盤面を作り、リンクで共有します", hint: "数字から確実にわかるマスを教えます(記録には残りません)", stats: "難易度ごとのプレイ数・勝率・ベスト" }, restartNone: "まだ始まっていない盤面です。", restarted: "同じ盤面を最初からやり直します。",
+      gmode: "ゲームモード", gm: { random: "完全ランダム", safe: "初手保証", noguess: "推測不要" }, generating: "推測なしで解ける盤面を作成中…", firstRandom: "完全ランダムモードでは最初のマスも地雷の可能性があります。", hintSafe: "緑に光ったマスは数字から確実に安全です。", hintMine: "赤く光ったマスは数字から確実に地雷です。旗を立てましょう。", hintWrongFlag: "光ったマスは安全ですが旗が立っています。旗を外してみてください。", noLogic: "今は数字から確定できるマスがひとつもありません。推測が必要な局面です。", byNumber: "番号で開始", numErr: "1〜999999 の数字を入力してください。", editor: "盤面エディタ", editHelp: "マスをクリックするかスペースキーで地雷を置いたり外したりします。盤面の大きさは難易度メニューで選びます。", editCount: n => `地雷 <b>${n}</b> 個`, editClear: "クリア", editPlay: "この盤面で遊ぶ", editCopy: "共有コードをコピー", editCopyLink: "共有リンクをコピー", editCopied: "コピーしました。友だちに送ってみましょう!", editCopyFail: "コピーできませんでした。下の欄の内容を直接コピーしてください。", editExit: "編集を終了", editLoad: "読み込む", editLoadPh: "共有コードかリンクを貼り付け", editBad: "コードを読み取れません。もう一度確認してください。", editLoaded: "盤面を読み込みました。", editNeed: "地雷を 1 個以上置き、空きマスも 1 つ以上残してください。", editedBoard: "作成した盤面", edited: "作成した盤面", sharedBoard: "共有された盤面です。初手保証がないので気をつけて!", tools: "ツール", introText: "はじめてですか?マスをクリックすると開き、スペースキーか右クリックで旗を立てます。数字の上でスペースキーを押すと周りが一度に開きます。難易度とモードは左のメニューで選べます。", introOk: "わかった", tip: { lv: { beginner: "初めてならここから", intermediate: "慣れてきたら次の段階", expert: "クラシックの最高難度", nothuman: "ここから上級より大きな盤面", superman: "広い盤面、集中力が必要", alien: "長期戦を覚悟して", god: "最大の盤面", custom: "幅・高さ・地雷数を自分で決めます" }, gm: { random: "最初のクリックでも地雷を踏むことがある従来の方式", safe: "最初にクリックしたマスと周りの8マスには地雷がありません(地雷がとても多いカスタム盤面ではクリックしたマスだけ)", noguess: "数字だけで必ず最後まで解ける盤面だけが出ます。推測は不要です" }, fit: "盤面を画面に合わせます", byNumber: "同じ番号で友だちと同じ盤面を遊べます(難易度・モード・最初のマスも同じにします)", editor: "地雷を自分で置いて盤面を作り、リンクで共有します(初手保証はありません)", hint: "数字から確実にわかるマスを教えます(記録には残りません)", stats: "難易度ごとのプレイ数・勝率・ベスト" }, restartNone: "まだ始まっていない盤面です。", restarted: "同じ盤面を最初からやり直します。この盤面は初手保証がないので気をつけて。",
       errW: "幅は5〜100で入力してください。", errH: "高さは5〜60で入力してください。", errM: n => `地雷は1〜${n}個で入力してください。`,
-      statsTitle: "統計", cols: ["難易度", "プレイ", "勝利", "勝率", "ベスト", "総プレイ時間"], close: "閉じる", reset: "リセット",
+      statsTitle: "統計", cols: ["難易度", "プレイ", "勝利", "勝率", "ベスト", "ベスト 3BV/s", "総プレイ時間"], close: "閉じる", reset: "リセット",
       fb: "フィードバック", fbPh: "改善点やバグを書いてください", fbSend: "送信", fbSending: "送信中…", fbSent: "送信しました。ありがとうございます!", fbEmpty: "内容を入力してください。", fbDenied: "現在の権限ではフィードバックを送れません。", fbOff: "claude.ai で開いたときだけ送信できます。", fbFail: "送信できませんでした。少し後でもう一度お試しください。", fbFull: "フィードバックの保存容量がいっぱいです。", fbInbox: "受け取ったフィードバック", fbNone: "まだフィードバックはありません。", someone: "だれか", 
-      resetAsk: "すべての統計を消去しますか?", resetYes: "消去", sec: s => `${s}秒`,
+      resetAsk: "すべての統計を消去しますか?プレイ中のゲームも記録されません。", resetYes: "消去", sec: s => `${s}秒`,
+      restartedFirst: "同じ盤面をやり直します。最初のマスを安全にするため、最初に開いたマスを開けておきました。", restartTip: "同じ地雷配置でもう一度遊びます。初手保証・推測不要モードでは最初に開いたマスが開いた状態で始まります",
+      controlsTouch: "タップ: 開く · 長押し(または旗モード): 旗 · 数字をタップ: 周囲を開く",
+      pause: "一時停止", pausedMsg: "一時停止中です。盤面をクリックするか P で再開します。", pauseCover: "一時停止中 · クリックで再開",
+      daily: "今日の盤面", dailyReady: d => `${d} の今日の盤面です。全員が同じ盤面を遊びます。中央が開いた状態で始まり、最初の操作から時間が進みます。`, dailyBest: x => `今日のベスト ${x}。もう一度挑戦しましょう。`,
+      dailyShare: "結果を共有", dailyCopied: "結果をコピーしました。貼り付けて共有しましょう。", dailyShareText: (d, t, b) => `MINE:D 今日の盤面 ${d}\n⏱ ${t} · 3BV/s ${b}`,
+      winStats: (b, bps, c, e) => `3BV ${b} · 3BV/s ${bps} · クリック ${c} · 効率 ${e}`, hold: "長押しで旗", holdOff: "オフ",
+      tipX: { pause: "時間を止めて盤面を隠します (P)", daily: "毎日変わる、全員共通の推測不要盤面 (30×16·99)", hold: "タッチでマスをこの時間押し続けると旗を立てます" },
+      hintChecking: "確定できるマスを探しています…",
+      noLogicUnsure: "ヒントでは確定できるマスを見つけられませんでした。盤面が複雑で、推測が本当に必要かは確認できませんでした。",
+      genTimeout: "制限時間内に推測なしで解ける盤面が見つからなかったため、ゲームを始めませんでした。もう一度試すか、別のマスを押してください。", genError: "盤面の作成中に問題が起きたため、ゲームを始めませんでした。もう一度お試しください。", genCanceled: "盤面の作成を取り消しました。マスを押すと作り直します。", genCancel: "取り消す", genRetry: "新しい番号でもう一度",
+      denseFirst: "地雷が多いため、今回は押したマスだけを安全にしました。周りのマスには地雷があるかもしれません。", editedNote: "作成した盤面には初手保証がありません。",
+      numHelp: "同じ盤面にするには、難易度(カスタムは幅・高さ・地雷数)とゲームモードを同じにし、最初に同じ位置のマスを押します。完全ランダムモードでは最初のマスの位置は関係ありません。",
+      tm: { open: "開く", flag: "旗", label: "タップの動作" }, board: "盤面",
+      cs: { closed: "未開封", flag: "旗", empty: "空白", num: n => `数字 ${n}`, mine: "地雷", boom: "踏んだ地雷", wrong: "間違った旗" }, cellName: (r, c, s) => `${r}行${c}列、${s}`,
     },
     zh: {
       title: "扫雷", modeLight: "浅色", modeDark: "深色", game: "游戏", new: "新游戏", restart: "重新开始", level: "难度", view: "视图", fit: "适应",
@@ -451,15 +531,29 @@
       diff: "难度", mode: "模式", modeVal: "首次点击安全", gameNo: "游戏编号", minesLeft: "剩余地雷", cellsLeft: "剩余格数",
       w: "宽", h: "高", m: "地雷", start: "开始",
       lv: { beginner: "初级", intermediate: "中级", expert: "高级", nothuman: "非人类", superman: "超人", alien: "外星人", god: "神", custom: "自定义" },
-      controls: "点击: 打开 · 未开格按空格(右键): 插旗 · 数字格按空格(点击): 打开周围",
+      controls: "点击: 打开 · 未开格按空格(右键): 插旗 · 数字格按空格(点击、双键): 打开周围 · P: 暂停",
       lose: "踩到地雷了。按 R 重玩同一局,按 N 开始新游戏。",
       win: t => `通关! ${t}`, winRecord: t => `通关! ${t},新纪录!`, winHinted: t => `通关! ${t}(使用了提示,不计入纪录)`,
       firstSafe: "第一次点击总是安全的。", hintShown: "闪绿光的格子是安全的。", noHint: "没有可以打开的安全格子了。",
-      gmode: "游戏模式", gm: { random: "完全随机", safe: "首次点击安全", noguess: "无需猜测" }, generating: "正在生成无需猜测的棋盘…", firstRandom: "完全随机模式下,第一次点击也可能踩到地雷。", hintSafe: "闪绿光的格子根据数字可以确定是安全的。", hintMine: "闪红光的格子根据数字可以确定是地雷,请插旗。", hintWrongFlag: "闪光的格子是安全的,但上面插了旗,试着拔掉旗子。", noLogic: "现在仅凭数字无法确定任何格子,这里需要猜测。", byNumber: "按编号开始", numErr: "请输入 1 到 999999 之间的数字。", editor: "棋盘编辑器", editHelp: "点击格子或按空格键放置或移除地雷。棋盘大小请在难度菜单中选择。", editCount: n => `地雷 <b>${n}</b> 颗`, editClear: "清空", editPlay: "玩这个棋盘", editCopy: "复制分享码", editCopyLink: "复制分享链接", editCopied: "已复制,发给朋友吧!", editCopyFail: "复制失败,请直接复制下方框中的内容。", editExit: "退出编辑", editLoad: "载入", editLoadPh: "粘贴分享码或链接", editBad: "无法读取这个代码,请检查后重试。", editLoaded: "已载入棋盘。", editNeed: "请至少放置 1 颗地雷,并至少留出 1 个空格。", editedBoard: "自制棋盘", edited: "自制棋盘", sharedBoard: "这是分享来的棋盘,没有首次点击保护,请小心!", tools: "工具", introText: "第一次来吗?点击格子即可打开,按空格键或右键插旗。在数字上按空格键可一次打开周围的格子。难度和模式可以在左侧菜单中选择。", introOk: "知道了", tip: { lv: { beginner: "新手从这里开始", intermediate: "熟悉之后的下一步", expert: "经典扫雷的最高难度", nothuman: "从这里开始比高级更大", superman: "更大的棋盘,需要专注", alien: "准备好打持久战", god: "最大的棋盘", custom: "自己设定宽、高和地雷数" }, gm: { random: "经典方式:第一次点击也可能踩到地雷", safe: "第一次点击的格子及周围 8 格没有地雷", noguess: "只出现仅凭数字就能解完的棋盘,无需猜测" }, fit: "让棋盘适应窗口大小", byNumber: "用相同编号和朋友玩同一局", editor: "自己放置地雷制作棋盘,并用链接分享", hint: "提示一个能由数字确定的格子(该局不计入纪录)", stats: "各难度的局数、胜率和最佳纪录" }, restartNone: "这一局还没有开始。", restarted: "从头重玩同一局。",
+      gmode: "游戏模式", gm: { random: "完全随机", safe: "首次点击安全", noguess: "无需猜测" }, generating: "正在生成无需猜测的棋盘…", firstRandom: "完全随机模式下,第一次点击也可能踩到地雷。", hintSafe: "闪绿光的格子根据数字可以确定是安全的。", hintMine: "闪红光的格子根据数字可以确定是地雷,请插旗。", hintWrongFlag: "闪光的格子是安全的,但上面插了旗,试着拔掉旗子。", noLogic: "现在仅凭数字无法确定任何格子,必须猜测。", byNumber: "按编号开始", numErr: "请输入 1 到 999999 之间的数字。", editor: "棋盘编辑器", editHelp: "点击格子或按空格键放置或移除地雷。棋盘大小请在难度菜单中选择。", editCount: n => `地雷 <b>${n}</b> 颗`, editClear: "清空", editPlay: "玩这个棋盘", editCopy: "复制分享码", editCopyLink: "复制分享链接", editCopied: "已复制,发给朋友吧!", editCopyFail: "复制失败,请直接复制下方框中的内容。", editExit: "退出编辑", editLoad: "载入", editLoadPh: "粘贴分享码或链接", editBad: "无法读取这个代码,请检查后重试。", editLoaded: "已载入棋盘。", editNeed: "请至少放置 1 颗地雷,并至少留出 1 个空格。", editedBoard: "自制棋盘", edited: "自制棋盘", sharedBoard: "这是分享来的棋盘,没有首次点击保护,请小心!", tools: "工具", introText: "第一次来吗?点击格子即可打开,按空格键或右键插旗。在数字上按空格键可一次打开周围的格子。难度和模式可以在左侧菜单中选择。", introOk: "知道了", tip: { lv: { beginner: "新手从这里开始", intermediate: "熟悉之后的下一步", expert: "经典扫雷的最高难度", nothuman: "从这里开始比高级更大", superman: "更大的棋盘,需要专注", alien: "准备好打持久战", god: "最大的棋盘", custom: "自己设定宽、高和地雷数" }, gm: { random: "经典方式:第一次点击也可能踩到地雷", safe: "第一次点击的格子及周围 8 格没有地雷(地雷很多的自定义棋盘只保护点击的格子)", noguess: "只出现仅凭数字就能解完的棋盘,无需猜测" }, fit: "让棋盘适应窗口大小", byNumber: "用相同编号和朋友玩同一局(难度、模式和第一次点击的位置也要相同)", editor: "自己放置地雷制作棋盘,并用链接分享(没有首次点击保护)", hint: "提示一个能由数字确定的格子(该局不计入纪录)", stats: "各难度的局数、胜率和最佳纪录" }, restartNone: "这一局还没有开始。", restarted: "从头重玩同一局。这个棋盘没有首次点击保护,请小心。",
       errW: "宽度请输入 5–100。", errH: "高度请输入 5–60。", errM: n => `地雷数请输入 1–${n}。`,
-      statsTitle: "统计", cols: ["难度", "局数", "胜利", "胜率", "最佳", "总游戏时间"], close: "关闭", reset: "重置",
+      statsTitle: "统计", cols: ["难度", "局数", "胜利", "胜率", "最佳", "最佳 3BV/s", "总游戏时间"], close: "关闭", reset: "重置",
       fb: "反馈", fbPh: "写下改进建议或发现的问题", fbSend: "发送", fbSending: "发送中…", fbSent: "已发送,谢谢!", fbEmpty: "请先输入内容。", fbDenied: "你当前的权限无法发送反馈。", fbOff: "在 claude.ai 中打开时才能发送反馈。", fbFail: "发送失败,请稍后再试。", fbFull: "反馈存储空间已满。", fbInbox: "收到的反馈", fbNone: "还没有反馈。", someone: "某人", 
-      resetAsk: "清除所有统计吗?", resetYes: "清除", sec: s => `${s}秒`,
+      resetAsk: "清除所有统计吗?正在进行的这一局也不会被记录。", resetYes: "清除", sec: s => `${s}秒`,
+      restartedFirst: "重玩同一局。为了让开局安全,已重新打开你第一次打开的格子。", restartTip: "用相同的地雷布局再玩一次。在首次点击安全和无需猜测模式下,开局时第一次打开的格子是打开的",
+      controlsTouch: "点按: 打开 · 长按(或插旗模式): 插旗 · 点按数字: 打开周围",
+      pause: "暂停", pausedMsg: "已暂停。点击棋盘或按 P 继续。", pauseCover: "已暂停 · 点击继续",
+      daily: "每日一局", dailyReady: d => `${d} 的每日一局:所有人玩同一个棋盘。开局时中央已打开,从你的第一步开始计时。`, dailyBest: x => `今日最佳 ${x}。再挑战一次吧。`,
+      dailyShare: "分享结果", dailyCopied: "已复制结果,粘贴即可分享。", dailyShareText: (d, t, b) => `MINE:D 每日一局 ${d}\n⏱ ${t} · 3BV/s ${b}`,
+      winStats: (b, bps, c, e) => `3BV ${b} · 3BV/s ${bps} · 点击 ${c} · 效率 ${e}`, hold: "长按插旗", holdOff: "关",
+      tipX: { pause: "停止计时并遮住棋盘 (P)", daily: "每天更换、所有人相同的无需猜测棋盘 (30×16·99)", hold: "在触屏上按住格子这么久即可插旗" },
+      hintChecking: "正在查找可以确定的格子…",
+      noLogicUnsure: "提示没有找到可以确定的格子。局面太复杂,无法确认是否真的必须猜测。",
+      genTimeout: "在限定时间内没有找到无需猜测的棋盘,因此没有开始游戏。请重试或点击其他格子。", genError: "生成棋盘时出了问题,因此没有开始游戏。请重试。", genCanceled: "已取消生成棋盘。点击格子即可重新生成。", genCancel: "取消", genRetry: "换个编号重试",
+      denseFirst: "地雷太多,这一局只保护了你点击的格子,周围的格子可能有地雷。", editedNote: "自制棋盘没有首次点击保护。",
+      numHelp: "要得到同一局,难度(自定义需宽、高、地雷数相同)和游戏模式要相同,第一次也要点击相同位置的格子。完全随机模式与第一次点击的位置无关。",
+      tm: { open: "打开", flag: "插旗", label: "点按操作" }, board: "雷区",
+      cs: { closed: "未打开", flag: "旗子", empty: "空白", num: n => `数字 ${n}`, mine: "地雷", boom: "踩到的地雷", wrong: "错误的旗子" }, cellName: (r, c, s) => `第${r}行第${c}列,${s}`,
     },
   };
 
@@ -467,14 +561,34 @@
   const read = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch { return d; } };
   const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
   const STATS = "minesweeper-stats-v3";
+  // Stored stats can be hand-edited or half-written: keep every valid entry as is, repair only the bad fields.
+  const isObj = v => v !== null && typeof v === "object" && !Array.isArray(v);
+  const count = v => Number.isSafeInteger(v) && v >= 0;
+  function cleanStats(raw) {
+    const out = {};
+    if (!isObj(raw)) return out;
+    for (const [k, s] of Object.entries(raw)) {
+      if (!isObj(s)) continue;
+      const e = { ...s };
+      if (!count(e.played)) e.played = 0;
+      if (!count(e.won)) e.won = 0;
+      if (e.won > e.played) e.won = e.played;
+      if (!(e.best === null || (typeof e.best === "number" && e.best >= 0 && Number.isFinite(e.best)))) e.best = null;   // 0.0 s is a real record (one-click boards)
+      if ("time" in e && !(typeof e.time === "number" && e.time >= 0 && Number.isFinite(e.time))) e.time = 0;
+      if ("bps" in e && !(typeof e.bps === "number" && e.bps >= 0 && Number.isFinite(e.bps))) delete e.bps;
+      out[k] = e;
+    }
+    return out;
+  }
   let stats = read(STATS, null);
   if (!stats) {  // v3 (mine counts changed): keep play counts and time, reset every best time
     stats = {};
-    const old = read("minesweeper-stats-v2", {});
+    const old = cleanStats(read("minesweeper-stats-v2", {}));
     for (const [k, s] of Object.entries(old)) stats[k] = { ...s, best: null };
-    write(STATS, stats);
   }
-  const PAGE_LANG = document.documentElement.dataset.pageLang || null;   // set on playmined.com pages
+  stats = cleanStats(stats);
+  write(STATS, stats);
+  const PAGE_LANG = document.documentElement.dataset.pageLang || null;   // set on the published language pages
   const LANG_PATH = { ko: "/", en: "/en/", ja: "/ja/", zh: "/zh/" };
   let lang = PAGE_LANG || read("minesweeper-lang", null) || "ko";
   if (!T[lang]) lang = "ko";
@@ -484,14 +598,18 @@
   let cfg = { key: "beginner", ...LEVELS.beginner };
   let mines, open, flags, counts, cells = [];
   let started = false, over = false, openedCount = 0, flagCount = 0, hintUsed = false, savedMines = null;
-  let gameNo = 0, lastBank = 0;
+  let firstClick = null, firstGuard = 0;   // where this layout was first opened, and how many cells were kept clear there
+  let gameNo = 0, lastBank = 0, activeKey = null;   // activeKey: stats entry the running game counts toward, fixed when it starts
   let t0 = 0, timer = null, elapsed = 0;
-  let cellPx = 28, statusKey = null, statusArg = null, statusCls = "";
+  let paused = false, pauseAt = 0, pausedMs = 0;   // paused time is left out of the clock and the stats
+  let clicks = 0, winInfo = null;                    // clicks this game (left, right, chord) for the efficiency line
+  let cellPx = 28, statusKey = null, statusArg = null, statusCls = "", statusAct = null;
+  let focusIdx = 0, touchMode = "open";
 
   const modeSuffix = () => gameMode === "safe" ? "" : "@" + gameMode;
-  const statKey = () => (cfg.key === "custom" ? `custom-${cfg.w}x${cfg.h}-${cfg.m}` : cfg.key) + modeSuffix();
+  const statKey = () => cfg.key === "daily" ? "daily" : (cfg.key === "custom" ? `custom-${cfg.w}x${cfg.h}-${cfg.m}` : cfg.key) + modeSuffix();
   const levelName = () => cfg.key === "custom" ? `${L().lv.custom} ${cfg.w}×${cfg.h}·${cfg.m}`
-    : cfg.key === "edited" ? `${L().edited} ${cfg.w}×${cfg.h}·${cfg.m}` : L().lv[cfg.key];
+    : cfg.key === "edited" ? `${L().edited} ${cfg.w}×${cfg.h}·${cfg.m}` : cfg.key === "daily" ? `${L().daily} ${cfg.date}` : L().lv[cfg.key];
   const fmt = s => L().sec(s.toFixed(1));
   // 00:00.0 — minutes, seconds, tenths
   const clock = s => {
@@ -512,81 +630,345 @@
     $("cellsLeft").textContent = (cfg.w * cfg.h - cfg.m - openedCount).toLocaleString();
   }
 
-  // ---------- board helpers ----------
-  const idx = (x, y) => y * cfg.w + x;
-  function neighbors(i) {
-    const x = i % cfg.w, y = (i / cfg.w) | 0, out = [];
-    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-      if (!dx && !dy) continue;
-      const nx = x + dx, ny = y + dy;
-      if (nx >= 0 && ny >= 0 && nx < cfg.w && ny < cfg.h) out.push(idx(nx, ny));
+  // ---------- inference engine ----------
+  // Pure functions: they see only which cells are open and the numbers on them, never the hidden layout.
+  // The hint uses them directly; the no-guess generator runs the same source in a worker (see GEN_SRC).
+  function nbTable(w, h) {
+    const t = new Array(w * h);
+    for (let i = 0; i < w * h; i++) {
+      const x = i % w, y = (i / w) | 0, a = [];
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if (!dx && !dy) continue;
+        const nx = x + dx, ny = y + dy;
+        if (nx >= 0 && ny >= 0 && nx < w && ny < h) a.push(ny * w + nx);
+      }
+      t[i] = a;
     }
-    return out;
+    return t;
+  }
+  // One step of deduction from the open numbers (cnt is read only where opened) and the cells already proven mines.
+  // Returns the cells the first rule that finds anything proves { safe, mines }, or { invalid: true } if the numbers contradict.
+  // `cand` (optional) lists the open cells worth reading — those next to a closed, unproven cell; without it every cell is read.
+  function deduce(N, m, opened, cnt, mine, cand) {
+    const n = N.length, safe = [], mines = [];
+    // found[j]: 1 = proven safe, 2 = proven mine this call. Kept between calls (and wiped before returning)
+    // so the solver's thousands of rounds don't each allocate board-sized arrays.
+    let found = deduce.found;
+    if (!found || found.length !== n) found = deduce.found = new Uint8Array(n);
+    const addSafe = j => { if (!(found[j] & 1)) { found[j] |= 1; safe.push(j); } };   // marking twice never counts twice
+    const addMine = j => { if (!(found[j] & 2)) { found[j] |= 2; mines.push(j); } };
+    const finish = r => { for (const j of safe) found[j] = 0; for (const j of mines) found[j] = 0; return r; };
+    const invalid = () => finish({ invalid: true });
+    const done = () => { for (const j of safe) if (found[j] & 2) return invalid(); return finish({ safe, mines }); };
+    // 1. each number on its own (open zeros included: anything closed next to one is safe)
+    const cons = [];   // the numbers rule 1 cannot settle: [closed cells, mines among them]
+    for (let t = 0, end = cand ? cand.length : n; t < end; t++) {
+      const i = cand ? cand[t] : t;
+      if (!opened[i]) continue;
+      let need = cnt[i], free = 0;
+      for (const j of N[i]) if (mine[j]) need--; else if (!opened[j]) free++;
+      if (need < 0 || need > free) return invalid();
+      if (!free) continue;
+      if (need === 0 || need === free) { for (const j of N[i]) if (!opened[j] && !mine[j]) (need ? addMine : addSafe)(j); }
+      else if (!safe.length && !mines.length) { const unk = []; for (const j of N[i]) if (!opened[j] && !mine[j]) unk.push(j); cons.push([unk, need]); }
+    }
+    if (safe.length || mines.length) return done();
+    // 2. subset rule: if A's cells all sit inside B, then B minus A holds needB - needA mines.
+    //    Any B that contains A also contains A's first cell, so only those numbers are compared.
+    const byCell = new Map();
+    cons.forEach((c, k) => { for (const x of c[0]) { let l = byCell.get(x); if (!l) byCell.set(x, l = []); l.push(k); } });
+    for (let a = 0; a < cons.length; a++) {
+      const [ca, na] = cons[a];
+      for (const b of byCell.get(ca[0])) {
+        const [cb, nb] = cons[b];
+        if (b === a || ca.length >= cb.length || !ca.every(x => cb.includes(x))) continue;
+        const diff = cb.filter(x => !ca.includes(x)), d = nb - na;
+        if (d < 0 || d > diff.length) return invalid();
+        if (d === 0) diff.forEach(addSafe);
+        else if (d === diff.length) diff.forEach(addMine);
+      }
+    }
+    if (safe.length || mines.length) return done();
+    // 3. mine counter: no mines left means every closed cell is safe, as many left as closed cells means all are mines
+    let closed = 0, proven = 0;
+    for (let i = 0; i < n; i++) if (!opened[i]) { if (mine[i]) proven++; else closed++; }
+    const left = m - proven;
+    if (left < 0 || left > closed) return invalid();
+    if (closed && (left === 0 || left === closed)) for (let i = 0; i < n; i++) if (!opened[i] && !mine[i]) (left ? addMine : addSafe)(i);
+    return done();
+  }
+  // Plays a layout from `first` with deduce() alone: opens what it proves safe (reading the real numbers there)
+  // and marks what it proves mines. solved = every safe cell opened without a guess. `steps` collects each round for tests.
+  // Yields after every round so it can be paused; solveFrom() runs it straight through.
+  // `buf` (optional) lends the board-sized arrays, so a caller trying many layouts doesn't allocate them each time;
+  // the opened/mine arrays returned then live in buf and are only good until the next call with it.
+  function* solveSteps(N, m, layout, first, steps, buf) {
+    const n = N.length;
+    if (buf && buf.n !== n) { buf.n = n; buf.cnt = new Uint8Array(n); buf.opened = new Uint8Array(n); buf.mine = new Uint8Array(n); buf.seen = new Uint8Array(n); }
+    const cnt = buf ? buf.cnt.fill(0) : new Uint8Array(n), opened = buf ? buf.opened.fill(0) : new Uint8Array(n);
+    const mine = buf ? buf.mine.fill(0) : new Uint8Array(n), seen = buf ? buf.seen : new Uint8Array(n);
+    for (let i = 0; i < n; i++) if (!layout[i]) { let s = 0; for (const j of N[i]) s += layout[j]; cnt[i] = s; }
+    let openN = 0, front = [];   // front: open cells still next to a closed, unproven cell (all deduce() needs to read)
+    const fresh = [];
+    const touchesClosed = i => { for (const j of N[i]) if (!opened[j] && !mine[j]) return true; return false; };
+    const openFrom = i => {
+      const st = [i];
+      while (st.length) {
+        const k = st.pop(); if (opened[k]) continue;
+        opened[k] = 1; openN++; fresh.push(k);
+        if (!cnt[k]) for (const j of N[k]) if (!opened[j]) st.push(j);
+      }
+    };
+    const refront = () => {
+      const next = [];
+      for (const list of [front, fresh]) for (const i of list) if (!seen[i] && touchesClosed(i)) { seen[i] = 1; next.push(i); }
+      for (const i of next) seen[i] = 0;
+      fresh.length = 0; front = next;
+    };
+    if (layout[first]) return { solved: false, opened, mine };
+    openFrom(first);
+    yield;
+    while (openN < n - m) {
+      refront();
+      const r = deduce(N, m, opened, cnt, mine, front);
+      if (r.invalid || !(r.safe.length || r.mines.length)) return { solved: false, opened, mine };
+      if (steps) steps.push({ safe: r.safe.slice(), mines: r.mines.slice() });
+      for (const j of r.mines) mine[j] = 1;
+      for (const j of r.safe) { if (layout[j]) return { solved: false, unsound: true, opened, mine }; openFrom(j); }
+      yield;
+    }
+    return { solved: true, opened, mine };
+  }
+  const runAll = it => { let r; do r = it.next(); while (!r.done); return r.value; };
+  const solveFrom = (N, m, layout, first, steps) => runAll(solveSteps(N, m, layout, first, steps));
+  // Exhaustive check of the open edge, for when deduce() is stuck: enumerates every mine arrangement the numbers
+  // and the mine total allow, and reports cells that are safe in all of them or a mine in all of them.
+  // complete: false when it ran past `budget` search steps (then nothing is claimed either way).
+  // A generator that yields every few thousand steps, so the page can run it in slices; exactCheck() runs it straight through.
+  function* exactSteps(N, m, opened, cnt, budget) {
+    const n = N.length, cons = [], rem = [], consOf = new Map();   // rem: mines each number still needs
+    let closed = 0;
+    for (let i = 0; i < n; i++) {
+      if (!opened[i]) { closed++; continue; }
+      const cells = N[i].filter(j => !opened[j]);
+      if (!cells.length) continue;
+      const k = cons.length;
+      cons.push(cells); rem.push(cnt[i]);
+      for (const j of cells) { let l = consOf.get(j); if (!l) consOf.set(j, l = []); l.push(k); }
+    }
+    const free = cons.map(c => c.length);   // cells each number still has unassigned
+    for (let k = 0; k < cons.length; k++) if (rem[k] > free[k]) return { complete: true, invalid: true };
+    const sea = closed - consOf.size;   // closed cells no number touches
+    // independent groups of edge cells
+    const groups = [], seenC = new Uint8Array(cons.length), seenX = new Set();
+    for (let s = 0; s < cons.length; s++) {
+      if (seenC[s]) continue;
+      const cells = [], q = [s]; seenC[s] = 1;
+      while (q.length) {
+        const k = q.pop();
+        for (const x of cons[k]) if (!seenX.has(x)) {
+          seenX.add(x); cells.push(x);
+          for (const k2 of consOf.get(x)) if (!seenC[k2]) { seenC[k2] = 1; q.push(k2); }
+        }
+      }
+      groups.push(cells);
+    }
+    yield;
+    let steps = 0;
+    const res = [];
+    for (const cells of groups) {
+      // depth-first over the group's cells without recursion: stage[d] = next value to try at depth d (2: both tried)
+      // byK: for each mine count k this group can hold, which cells can be a mine / can be safe with k mines
+      const len = cells.length, cs = cells.map(x => consOf.get(x)), val = new Int8Array(len).fill(-1), stage = new Uint8Array(len + 1), byK = new Map();
+      let mineN = 0, d = 0;
+      const put = (t, v) => {
+        let ok = mineN + v <= m;
+        for (const k of cs[t]) { free[k]--; rem[k] -= v; if (rem[k] < 0 || rem[k] > free[k]) ok = false; }
+        mineN += v; val[t] = v;
+        return ok;
+      };
+      const take = t => { const v = val[t]; for (const k of cs[t]) { free[k]++; rem[k] += v; } mineN -= v; val[t] = -1; };
+      while (d >= 0) {
+        if (++steps > budget) return { complete: false };
+        if (!(steps & 4095)) yield;
+        if (d === len) {
+          let e = byK.get(mineN);
+          if (!e) byK.set(mineN, e = { mine: new Uint8Array(len), safe: new Uint8Array(len) });
+          for (let t = 0; t < len; t++) (val[t] ? e.mine : e.safe)[t] = 1;
+          steps += len >> 4;
+          d--; continue;
+        }
+        if (val[d] >= 0) take(d);
+        if (stage[d] === 2) { stage[d] = 0; d--; continue; }
+        if (put(d, stage[d]++)) d++;   // a value that breaks a number is taken back on the next pass
+      }
+      if (!byK.size) return { complete: true, invalid: true };
+      const ks = new Uint8Array(len + 1); for (const k of byK.keys()) ks[k] = 1;
+      res.push({ cells, ks, byK });
+    }
+    // combine the groups with the mine total: pre[c] / suf[c] = totals reachable by the groups before / after c
+    const C = res.length, cap = m;
+    const add = (A, ks) => { const B = new Uint8Array(cap + 1); for (let a = 0; a <= cap; a++) if (A[a]) for (let k = 0; k < ks.length && a + k <= cap; k++) if (ks[k]) B[a + k] = 1; return B; };
+    const unit = new Uint8Array(cap + 1); unit[0] = 1;
+    const pre = [unit], suf = new Array(C + 1); suf[C] = unit;
+    for (let c = 0; c < C; c++) { pre.push(add(pre[c], res[c].ks)); yield; }
+    for (let c = C - 1; c >= 0; c--) { suf[c] = add(suf[c + 1], res[c].ks); yield; }
+    const safe = [], mines = [];
+    for (let c = 0; c < C; c++) {
+      const P = pre[c], S = suf[c + 1], sc = new Int32Array(cap + 2);   // prefix sums of S for range checks
+      for (let a = 0; a <= cap; a++) sc[a + 1] = sc[a] + S[a];
+      const anyS = (lo, hi) => { lo = Math.max(lo, 0); hi = Math.min(hi, cap); return lo <= hi && sc[hi + 1] - sc[lo] > 0; };
+      // total with this group holding k mines works if the others plus the sea can make up the rest
+      const fits = k => { for (let a = 0; a <= cap; a++) if (P[a] && anyS(m - k - a - sea, m - k - a)) return true; return false; };
+      const ok = [...res[c].byK].filter(([k]) => fits(k)).map(([, e]) => e);
+      res[c].cells.forEach((x, t) => {
+        const mineOk = ok.some(e => e.mine[t]), safeOk = ok.some(e => e.safe[t]);
+        if (!mineOk && !safeOk) return;
+        if (!mineOk) safe.push(x); else if (!safeOk) mines.push(x);
+      });
+      yield;
+    }
+    if (sea) {
+      const F = pre[C];
+      let mineOk = false, safeOk = false;
+      for (let T = 0; T <= cap; T++) if (F[T]) { const s = m - T; if (s >= 1 && s <= sea) mineOk = true; if (s >= 0 && s <= sea - 1) safeOk = true; }
+      if (!mineOk || !safeOk) for (let i = 0; i < n; i++) if (!opened[i] && !consOf.has(i)) (mineOk ? mines : safe).push(i);
+    }
+    return { complete: true, safe, mines };
+  }
+  const exactCheck = (N, m, opened, cnt, budget) => runAll(exactSteps(N, m, opened, cnt, budget));
+
+  // Runs a generator in slices between other page work, so clicks, keys and painting get through.
+  // A slice stops at the first yield after `ms`: `ms` is a target, and a slice can run over by one step
+  // (the generators above keep each step short). Returns a function that stops it.
+  // The next slice goes in as a low-priority task where the browser has a task scheduler, so input and painting
+  // go first; elsewhere a zero-delay message task (no 4 ms clamp on long chains, unlike setTimeout).
+  const nextTask = globalThis.scheduler?.postTask ? f => { scheduler.postTask(f, { priority: "background" }); } : (() => {
+    const ch = new MessageChannel(), queue = [];
+    ch.port1.onmessage = () => queue.shift()();
+    return f => { queue.push(f); ch.port2.postMessage(0); };
+  })();
+  function runSliced(it, ms, done, fail) {
+    let stopped = false;
+    const slice = () => {
+      if (stopped) return;
+      const end = performance.now() + ms;
+      try {
+        for (;;) {
+          const r = it.next();
+          if (r.done) { stopped = true; return done(r.value); }
+          if (performance.now() >= end) break;
+        }
+      } catch (e) { stopped = true; return fail(e); }
+      nextTask(slice);
+    };
+    nextTask(slice);
+    return () => { stopped = true; };
   }
 
-  function setStatus(key, arg, cls) { statusKey = key; statusArg = arg; statusCls = cls || ""; paintStatus(); }
+  // ---------- board helpers ----------
+  let NB = [], NBw = 0, NBh = 0;   // neighbor lists, rebuilt only when the board size changes
+  function nbs() { if (NBw !== cfg.w || NBh !== cfg.h) { NB = nbTable(cfg.w, cfg.h); NBw = cfg.w; NBh = cfg.h; } return NB; }
+  const neighbors = i => nbs()[i];   // shared arrays: never mutate the result
+
+  function setStatus(key, arg, cls, act) { statusKey = key; statusArg = arg; statusCls = cls || ""; statusAct = act || null; paintStatus(); }
   function paintStatus() {
     const v = statusKey ? L()[statusKey] : "";
     $("status").textContent = typeof v === "function" ? v(statusArg) : v;
     $("status").className = "status " + statusCls;
+    $("statusAct").hidden = !statusAct;
+    if (statusAct) $("statusAct").textContent = L()[statusAct.key];
+  }
+
+  // Screen-reader name of a cell, from what is shown on it (a closed cell never tells whether it hides a mine).
+  function labelCell(i) {
+    const t = L(), s = t.cs, c = cells[i], cl = c.classList;
+    const state = cl.contains("boom") ? s.boom : cl.contains("wrong") ? s.wrong : cl.contains("mine") || cl.contains("emine") ? s.mine
+      : cl.contains("flag") ? s.flag : cl.contains("open") ? (counts[i] ? s.num(counts[i]) : s.empty) : s.closed;
+    c.setAttribute("aria-label", t.cellName(((i / cfg.w) | 0) + 1, i % cfg.w + 1, state));
+  }
+  const labelAll = () => { for (let i = 0; i < cells.length; i++) labelCell(i); };
+  function focusCell(i, move) {
+    if (!cells[i]) return;
+    if (cells[focusIdx]) cells[focusIdx].tabIndex = -1;
+    focusIdx = i; cells[i].tabIndex = 0;
+    if (move) cells[i].focus();
   }
 
   function buildBoard() {
     if (started && !over) bankTime();
-    if (genWorker) { genWorker.terminate(); genWorker = null; }
-    generating = false;
+    cancelGen(); stopHint();
+    activeKey = null;
     const n = cfg.w * cfg.h;
     open = new Uint8Array(n); flags = new Uint8Array(n);
     started = false; over = false; openedCount = 0; flagCount = 0; hintUsed = false; elapsed = 0;
+    paused = false; pausedMs = 0; clicks = 0; winInfo = null;
     clearInterval(timer); timer = null;
     $("time").textContent = clock(0);
+    $("board").classList.remove("paused"); $("pauseBtn").setAttribute("aria-pressed", "false"); paintWinStats();
     const board = $("board");
-    board.style.gridTemplateColumns = `repeat(${cfg.w}, var(--cell))`;
-    const frag = document.createDocumentFragment();
+    const frag = document.createDocumentFragment(), t = L();
     cells = new Array(n);
-    for (let i = 0; i < n; i++) {
-      const c = document.createElement("button");
-      c.type = "button"; c.className = "cell"; c.dataset.i = i; c.tabIndex = -1;
-      frag.appendChild(c); cells[i] = c;
+    for (let y = 0; y < cfg.h; y++) {
+      const row = document.createElement("div");
+      row.className = "brow"; row.setAttribute("role", "row");
+      for (let x = 0; x < cfg.w; x++) {
+        const i = y * cfg.w + x, c = document.createElement("button");
+        c.type = "button"; c.className = "cell"; c.dataset.i = i; c.tabIndex = -1; c.setAttribute("role", "gridcell");
+        c.setAttribute("aria-label", t.cellName(y + 1, x + 1, t.cs.closed));
+        row.appendChild(c); cells[i] = c;
+      }
+      frag.appendChild(row);
     }
     board.replaceChildren(frag);
-    if (cells[0]) cells[0].tabIndex = 0;
+    focusIdx = 0; if (cells[0]) cells[0].tabIndex = 0;
     paintHud();
   }
 
   function newGame(no) {
     if (editing) closeEditor(false);
     if (cfg.key === "edited") cfg = { key: "custom", w: cfg.w, h: cfg.h, m: cfg.m };
+    if (cfg.key === "daily") { cfg = { key: "expert", ...LEVELS.expert }; markLevel(); }   // N leaves the daily board
     const n = cfg.w * cfg.h;
-    mines = new Uint8Array(n); counts = new Uint8Array(n); savedMines = null;
+    mines = new Uint8Array(n); counts = new Uint8Array(n); savedMines = null; firstClick = null; firstGuard = 0;
     gameNo = Number.isInteger(no) ? no : 100000 + Math.floor(Math.random() * 900000);
     buildBoard();
     setStatus(null);
   }
 
-  // Same mine layout, fresh board. Before the first click there is no layout yet.
+  // Same mine layout, fresh board. In the modes that promise a safe first click, the first cell is opened again
+  // (a different first cell could be a mine, and a no-guess board is only proven solvable from there).
+  // Pure random and built boards promised nothing, so they start closed.
   function restart() {
-    if (!savedMines) { setStatus("restartNone", null, "info"); return; }
+    if (editing || gen) return;   // the editor owns the board (its size may not match the last layout); a board is being built
+    if (!savedMines || savedMines.length !== cfg.w * cfg.h) { setStatus("restartNone", null, "info"); return; }
     mines = savedMines.slice();
     buildBoard();
     computeCounts();
-    started = false;
-    setStatus("restarted", null, "info");
+    if (firstClick != null && firstGuard > 0) {
+      begin(); reveal(firstClick); clicks = 1;   // the reopened first cell counts as the first click
+      setStatus("restartedFirst", null, "info");
+      checkWin();
+    } else setStatus("restarted", null, "info");
   }
 
   function computeCounts() {
-    const n = cfg.w * cfg.h;
+    const n = cfg.w * cfg.h, N = nbs();
     counts = new Uint8Array(n);
-    for (let i = 0; i < n; i++) if (!mines[i]) { let s = 0; for (const j of neighbors(i)) s += mines[j]; counts[i] = s; }
+    for (let i = 0; i < n; i++) if (!mines[i]) { let s = 0; for (const j of N[i]) s += mines[j]; counts[i] = s; }
   }
 
-  // First click keeps the clicked cell and its neighbors clear.
+  // Cells a safe first click keeps clear: the cell and its neighbors, or just the cell when the board is too full for that.
+  function guardFor(first) {
+    if (gameMode === "random") return [];
+    const area = [first, ...neighbors(first)];
+    return cfg.w * cfg.h - area.length >= cfg.m ? area : [first];
+  }
   function placeMines(first) {
-    const n = cfg.w * cfg.h;
-    let safe = gameMode === "random" ? new Set() : new Set([first, ...neighbors(first)]);
-    if (n - safe.size < cfg.m) safe = new Set([first]);
+    const n = cfg.w * cfg.h, guard = guardFor(first), keep = new Uint8Array(n);
+    for (const i of guard) keep[i] = 1;
     const pool = [];
-    for (let i = 0; i < n; i++) if (!safe.has(i)) pool.push(i);
+    for (let i = 0; i < n; i++) if (!keep[i]) pool.push(i);
     const rand = rng(gameMode === "random" ? gameNo * 7919 : gameNo * 7919 + first);
     for (let k = 0; k < cfg.m; k++) {
       const j = k + Math.floor(rand() * (pool.length - k));
@@ -594,39 +976,62 @@
       mines[pool[k]] = 1;
     }
     computeCounts();
-    savedMines = mines.slice();
+    savedMines = mines.slice(); firstClick = first; firstGuard = guard.length;
   }
 
   function begin() {
     started = true;
-    if (cfg.key !== "edited") {
-      const s = stats[statKey()] || (stats[statKey()] = { played: 0, won: 0, best: null });
+    activeKey = cfg.key === "edited" ? null : statKey();
+    if (activeKey) {
+      const s = stats[activeKey] || (stats[activeKey] = { played: 0, won: 0, best: null });
       s.played++; write(STATS, stats);
     }
-    t0 = performance.now(); lastBank = t0;
-    timer = setInterval(() => {
-      elapsed = (performance.now() - t0) / 1000;
-      $("time").textContent = clock(elapsed);
-    }, 100);
+    t0 = performance.now(); lastBank = t0; pausedMs = 0; paused = false;
+    runClock();
     setStatus(null);
+  }
+  const playSeconds = () => ((paused ? pauseAt : performance.now()) - t0 - pausedMs) / 1000;
+  function runClock() {
+    clearInterval(timer);
+    timer = setInterval(() => { elapsed = playSeconds(); $("time").textContent = clock(elapsed); }, 100);
+  }
+  // Pause stops the clock and covers the board (so a pause is not free thinking time). Leaving the tab pauses too.
+  function pause() {
+    if (!started || over || paused || gen || editing) return;
+    bankTime();
+    paused = true; pauseAt = performance.now();
+    clearInterval(timer); elapsed = playSeconds(); $("time").textContent = clock(elapsed);
+    stopHint();
+    $("board").classList.add("paused"); $("pauseBtn").setAttribute("aria-pressed", "true");
+    setStatus("pausedMsg", null, "info");
+  }
+  function resume() {
+    if (!paused) return;
+    const now = performance.now();
+    pausedMs += now - pauseAt; paused = false; lastBank = now;
+    runClock();
+    $("board").classList.remove("paused"); $("pauseBtn").setAttribute("aria-pressed", "false");
+    if (statusKey === "pausedMsg") setStatus(null);
   }
 
   function reveal(i) {
-    const stack = [i];
+    if (open[i] || flags[i]) return;
+    stopHint();
+    const N = nbs(), stack = [i], t = L(), w = cfg.w;
+    open[i] = 1;   // cells are marked when queued, so none is queued twice
     while (stack.length) {
-      const k = stack.pop();
-      if (open[k] || flags[k]) continue;
-      open[k] = 1; openedCount++;
-      const c = cells[k];
+      const k = stack.pop(), c = cells[k], v = counts[k];
+      openedCount++;
       c.classList.add("open");
-      if (counts[k]) { c.textContent = counts[k]; c.classList.add("num", "n" + counts[k]); }
-      else for (const j of neighbors(k)) if (!open[j] && !mines[j]) stack.push(j);
+      if (v) { c.textContent = v; c.classList.add("num", "n" + v); }
+      else for (const j of N[k]) if (!open[j] && !flags[j] && !mines[j]) { open[j] = 1; stack.push(j); }
+      c.setAttribute("aria-label", t.cellName(((k / w) | 0) + 1, k % w + 1, v ? t.cs.num(v) : t.cs.empty));
     }
     paintCounts();
   }
 
   function openCell(i) {
-    if (over || generating || open[i] || flags[i]) return;
+    if (over || gen || paused || open[i] || flags[i]) return;
     if (!started) {
       if (!savedMines && gameMode === "noguess") { generateNoGuess(i); return; }
       if (!savedMines) placeMines(i);
@@ -634,13 +1039,15 @@
     }
     if (mines[i]) return lose(i);
     reveal(i);
+    if (firstClick === i && firstGuard === 1 && openedCount && !over) setStatus("denseFirst", null, "info");
     checkWin();
   }
 
   function chord(i) {
-    if (over || generating || !open[i] || !counts[i]) return;
+    if (over || gen || paused || !open[i] || !counts[i]) return;
     const ns = neighbors(i);
     if (ns.reduce((s, j) => s + flags[j], 0) !== counts[i]) return;
+    if (!started) begin();   // a board that starts with cells already open (daily) starts its clock here
     for (const j of ns) if (!open[j] && !flags[j]) {
       if (mines[j]) return lose(j);
       reveal(j);
@@ -649,20 +1056,22 @@
   }
 
   function toggleFlag(i) {
-    if (over || generating || open[i]) return;
+    if (over || gen || paused || open[i]) return;
+    stopHint();
     flags[i] ^= 1;
     flagCount += flags[i] ? 1 : -1;
     cells[i].classList.toggle("flag", !!flags[i]);
+    labelCell(i);
     paintCounts();
   }
 
-  function stop() { if (started && !over) bankTime(); over = true; clearInterval(timer); if (started) elapsed = (performance.now() - t0) / 1000; }
+  function stop() { stopHint(); if (started && !over) bankTime(); over = true; clearInterval(timer); if (started) elapsed = playSeconds(); }
 
-  // Add time played since the last bank to this level's total. Runs on game end, abandon, and page hide.
+  // Add time played since the last bank to the running game's entry. Runs on game end, abandon, and page hide.
   function bankTime() {
     const now = performance.now();
-    const s = stats[statKey()];
-    if (s) { s.time = (s.time || 0) + (now - lastBank) / 1000; write(STATS, stats); }
+    const s = activeKey && stats[activeKey];
+    if (s && !paused) { s.time = (s.time || 0) + (now - lastBank) / 1000; write(STATS, stats); }
     lastBank = now;
   }
   const hms = sec => {
@@ -673,99 +1082,178 @@
   function lose(i) {
     stop();
     for (let k = 0; k < mines.length; k++) {
-      if (mines[k] && !flags[k]) cells[k].classList.add("open", "mine");
-      if (!mines[k] && flags[k]) { cells[k].classList.remove("flag"); cells[k].classList.add("open", "wrong"); }
+      if (mines[k] && !flags[k]) { cells[k].classList.add("open", "mine"); labelCell(k); }
+      if (!mines[k] && flags[k]) { cells[k].classList.remove("flag"); cells[k].classList.add("open", "wrong"); labelCell(k); }
     }
-    cells[i].classList.add("boom");
+    cells[i].classList.add("boom"); labelCell(i);
     setStatus("lose", null, "lose");
   }
 
   function checkWin() {
     if (openedCount !== cfg.w * cfg.h - cfg.m) return;
     stop();
-    for (let k = 0; k < mines.length; k++) if (mines[k] && !flags[k]) { flags[k] = 1; flagCount++; cells[k].classList.add("flag"); }
+    for (let k = 0; k < mines.length; k++) if (mines[k] && !flags[k]) { flags[k] = 1; flagCount++; cells[k].classList.add("flag"); labelCell(k); }
     paintCounts();
     const t = Math.round(elapsed * 10) / 10;
     $("time").textContent = clock(t);
-    if (cfg.key === "edited") { setStatus("win", fmt(t), "win"); return; }
-    const s = stats[statKey()] || (stats[statKey()] = { played: 1, won: 0, best: null });
-    s.won++;
+    const b = bbbv(), bps = t > 0 ? b / t : null;
+    winInfo = { b, bps, clicks: Math.max(clicks, 1) };
+    paintWinStats();
+    const share = cfg.key === "daily" ? { key: "dailyShare", run: shareDaily } : null;
+    if (cfg.key === "daily") logDaily(t);
+    const s = activeKey && stats[activeKey];   // none for built boards, or after the stats were reset mid-game
+    if (!s) { setStatus("win", fmt(t), "win", share); return; }
+    s.won = Math.min(s.won + 1, s.played);
     let key = "win";
     if (hintUsed) key = "winHinted";
-    else if (s.best == null || t < s.best) { s.best = t; key = "winRecord"; }
+    else {
+      if (s.best == null || t < s.best) { s.best = t; key = "winRecord"; }
+      if (bps != null && !(s.bps >= bps)) s.bps = Math.round(bps * 100) / 100;
+    }
     write(STATS, stats);
-    setStatus(key, fmt(t), "win");
+    setStatus(key, fmt(t), "win", share);
     paintHud();
   }
 
-  // Hint: show a move the numbers prove (a safe cell to open or a mine to flag). Ignores the player's own flags.
-  function logicalMove() {
-    const n = cfg.w * cfg.h, known = new Uint8Array(n);   // 1 = proven mine
-    let provenMines = 0;
-    const unknownOf = i => neighbors(i).filter(j => !open[j] && !known[j]);
-    for (let round = 0; round < 500; round++) {
-      let progressed = false;
-      const cons = [];
-      for (let i = 0; i < n; i++) {
-        if (!open[i] || !counts[i]) continue;
-        const unk = unknownOf(i);
-        if (!unk.length) continue;
-        const need = counts[i] - neighbors(i).filter(j => known[j]).length;
-        if (need === 0) return { type: "safe", cells: unk };
-        if (need === unk.length) { for (const j of unk) { known[j] = 1; provenMines++; } progressed = true; continue; }
-        cons.push([unk, need]);
-      }
-      const flagless = [];
-      for (let i = 0; i < n; i++) if (known[i] && !flags[i]) flagless.push(i);
-      if (flagless.length) return { type: "mine", cells: flagless };
-      if (progressed) continue;
-      for (const [ca, na] of cons) for (const [cb, nb] of cons) {
-        if (ca.length >= cb.length || !ca.every(x => cb.includes(x))) continue;
-        const diff = cb.filter(x => !ca.includes(x)), d = nb - na;
-        if (d === 0 && diff.length) return { type: "safe", cells: diff };
-        if (d === diff.length && diff.length) { for (const j of diff) { known[j] = 1; provenMines++; } progressed = true; }
-      }
-      if (progressed) continue;
-      const hidden = []; for (let i = 0; i < n; i++) if (!open[i] && !known[i]) hidden.push(i);
-      if (hidden.length && cfg.m - provenMines === 0) return { type: "safe", cells: hidden };
-      if (hidden.length && cfg.m - provenMines === hidden.length) { for (const j of hidden) { known[j] = 1; provenMines++; } continue; }
-      return null;
+  // 3BV: the fewest left clicks that clear the board — one per opening (a connected patch of zeros with its rim)
+  // plus one per safe number cell outside every opening. 3BV/s and 3BV ÷ clicks are what players compare.
+  function bbbv() {
+    const N = nbs(), n = cfg.w * cfg.h, seen = new Uint8Array(n);
+    let v = 0;
+    for (let i = 0; i < n; i++) {
+      if (mines[i] || counts[i] || seen[i]) continue;
+      v++;
+      const st = [i]; seen[i] = 1;
+      while (st.length) { const k = st.pop(); if (!counts[k]) for (const j of N[k]) if (!seen[j]) { seen[j] = 1; st.push(j); } }
     }
-    return null;
+    for (let i = 0; i < n; i++) if (!mines[i] && !seen[i]) v++;
+    return v;
+  }
+  function paintWinStats() {
+    const el = $("winStats");
+    el.hidden = !winInfo;
+    if (winInfo) el.textContent = L().winStats(winInfo.b, winInfo.bps == null ? "—" : winInfo.bps.toFixed(2), winInfo.clicks, Math.round(winInfo.b / winInfo.clicks * 100) + "%");
+  }
+
+  // ---------- daily board: the same no-guess 30×16·99 board for everyone on a calendar date ----------
+  const DAILY = { w: 30, h: 16, m: 99 }, DAILY_LOG = "minesweeper-daily";
+  const today = () => { const d = new Date(), p = x => String(x).padStart(2, "0"); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
+  let dailyLog = read(DAILY_LOG, {});
+  if (!isObj(dailyLog)) dailyLog = {};
+  function startDaily(date = today()) {
+    if (editing) closeEditor(false);
+    $("custom").hidden = true;
+    cfg = { key: "daily", ...DAILY, date };
+    const n = cfg.w * cfg.h, first = (cfg.h >> 1) * cfg.w + (cfg.w >> 1);
+    mines = new Uint8Array(n); counts = new Uint8Array(n); savedMines = null; firstClick = null; firstGuard = 0;
+    gameNo = +date.replace(/-/g, "");
+    buildBoard(); fitZoom(); markLevel();
+    generateNoGuess(first, { daily: true });
+  }
+  function logDaily(t) {
+    const e = dailyLog[cfg.date] || (dailyLog[cfg.date] = { wins: 0, best: null });
+    e.wins = (e.wins | 0) + 1;
+    if (!hintUsed && (e.best == null || t < e.best)) e.best = t;
+    const keep = Object.keys(dailyLog).sort().slice(-120);   // a few months is plenty
+    dailyLog = Object.fromEntries(keep.map(k => [k, dailyLog[k]]));
+    write(DAILY_LOG, dailyLog);
+  }
+  async function shareDaily() {
+    const best = dailyLog[cfg.date]?.best ?? elapsed;
+    const link = SITE ? `\n${location.origin}${location.pathname}?daily` : "";
+    const text = L().dailyShareText(cfg.date, clock(best), winInfo?.bps != null ? winInfo.bps.toFixed(2) : "—") + link;
+    try {
+      if (navigator.share && matchMedia("(any-pointer: coarse)").matches) { await navigator.share({ text }); return; }
+      await navigator.clipboard.writeText(text);
+      setStatus("dailyCopied", null, "win", { key: "dailyShare", run: shareDaily });
+    } catch { window.prompt("", text); }
+  }
+
+  // Hint: a move the numbers prove (a safe cell to open or a mine to flag). The player's own flags are not trusted.
+  // The quick rules answer at once; when they are stuck, hint() runs the exhaustive check in slices.
+  let exactBudget = 300000, hintStop = null;
+  function hintRules() {
+    const N = nbs(), mine = new Uint8Array(cfg.w * cfg.h);
+    for (;;) {
+      const r = deduce(N, cfg.m, open, counts, mine);
+      if (r.invalid || r.safe.length) return r.invalid ? null : { type: "safe", cells: r.safe };
+      if (!r.mines.length) return null;
+      for (const j of r.mines) mine[j] = 1;
+      const unflagged = r.mines.filter(j => !flags[j]);
+      if (unflagged.length) return { type: "mine", cells: unflagged };
+    }
+  }
+  // "guess" only when every arrangement was checked; a check cut short by its budget says "unsure" instead
+  function hintExact(x) {
+    if (!x || !x.complete || x.invalid) return { type: "unsure" };
+    if (x.safe.length) return { type: "safe", cells: x.safe };
+    const unflagged = x.mines.filter(j => !flags[j]);
+    return unflagged.length ? { type: "mine", cells: unflagged } : { type: "guess" };
+  }
+  function hintMove() {   // the whole hint in one go (used by tests)
+    const mv = hintRules();
+    if (mv) return mv;
+    let x = null;
+    try { x = exactCheck(nbs(), cfg.m, open, counts, exactBudget); } catch {}
+    return hintExact(x);
+  }
+  function stopHint() {   // any move or a new board makes a running check stale
+    if (!hintStop) return;
+    hintStop(); hintStop = null;
+    if (statusKey === "hintChecking") setStatus(null);
   }
   function flash(i, cls) {
     const c = cells[i];
     c.classList.remove("hint", "hint-mine"); void c.offsetWidth; c.classList.add(cls);
     setTimeout(() => c.classList.remove(cls), 2200);
     c.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+    if ($("board").contains(document.activeElement)) focusCell(i, true);
   }
-  function hint() {
-    if (over || generating || editing) return;
-    if (!started && !savedMines) { setStatus(gameMode === "random" ? "firstRandom" : "firstSafe", null, "info"); return; }
-    const mv = logicalMove();
-    if (!mv) { setStatus("noLogic", null, "info"); return; }
+  function showHint(mv) {
+    if (mv.type === "guess") { setStatus("noLogic", null, "info"); return; }
+    if (mv.type === "unsure") { setStatus("noLogicUnsure", null, "info"); return; }
     hintUsed = true;
     if (mv.type === "mine") { flash(mv.cells[0], "hint-mine"); setStatus("hintMine", null, "info"); return; }
     const unflagged = mv.cells.filter(j => !flags[j]);
     if (unflagged.length) { flash(unflagged[Math.floor(Math.random() * unflagged.length)], "hint"); setStatus("hintSafe", null, "info"); }
     else { flash(mv.cells[0], "hint"); setStatus("hintWrongFlag", null, "info"); }
   }
+  function hint() {
+    if (over || gen || editing || paused || hintStop) return;
+    if (!started && !savedMines) { setStatus(gameMode === "random" ? "firstRandom" : "firstSafe", null, "info"); return; }
+    const mv = hintRules();
+    if (mv) { showHint(mv); return; }
+    // a busy edge can take tens of ms to check: run it in slices, and say so if it is still going after a moment
+    const slow = setTimeout(() => setStatus("hintChecking", null, "info"), 150);
+    const end = x => { clearTimeout(slow); hintStop = null; showHint(hintExact(x)); };
+    const stopSlices = runSliced(exactSteps(nbs(), cfg.m, open.slice(), counts, exactBudget), 8, end, () => end(null));
+    hintStop = () => { clearTimeout(slow); stopSlices(); };
+  }
 
   // ---------- zoom ----------
   const ZOOMS = [12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40];
+  // The board sits dead-center of the page while it fits between the menu and an equal margin on the right;
+  // a wider board drops that right margin and centers in everything right of the menu instead.
+  const menuSpace = () => window.innerWidth > 700 ? 172 + 44 : 0;   // matches .stage's margin
+  function placeBoard() {
+    const centered = window.innerWidth - 2 * menuSpace();
+    $("stage").classList.toggle("wide", !!menuSpace() && cfg.w * cellPx + 4 > centered);
+  }
   function setCell(px) {
     cellPx = px;
     $("board").style.setProperty("--cell", px + "px");
     $("zoomVal").textContent = Math.round(px / 28 * 100) + "%";
+    placeBoard();
   }
+  // Fit width: everything right of the menu. Fit height: the window minus what sits above and below the board
+  // (info panel, status line, controls), measured, so the status line stays on screen. Phones keep a fixed allowance.
   function fitZoom() {
-    const menuW = window.innerWidth > 700 ? 172 : 0;
-    const availW = window.innerWidth - 2 * (menuW + 12) - 8;
-    const availH = window.innerHeight - 130;
+    const stage = $("stage"), board = $("board"), cs = getComputedStyle(stage);
+    const availW = window.innerWidth - (menuSpace() ? menuSpace() + 16 : 32) - 4;
+    const around = board.parentElement.offsetHeight - board.offsetHeight + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+    const availH = menuSpace() ? stage.clientHeight - around - 4 : window.innerHeight - 130;
     const fit = Math.min(availW / cfg.w, availH / cfg.h);
-    let px = ZOOMS[0];
-    for (const z of ZOOMS) if (z <= Math.min(fit, 32)) px = z;
-    setCell(px);
+    setCell(Math.max(ZOOMS[0], Math.min(32, Math.floor(fit))));   // any whole size in between: +/- then snap to ZOOMS steps
   }
   // Beginner and intermediate always start at 114% (32px cells); bigger boards start fitted to the window.
   const FIXED_START = { beginner: 32, intermediate: 32 };
@@ -822,103 +1310,117 @@
   });
 
 
-  const NOGUESS_SRC = `
-  function rngF(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
-    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-  function genNoGuess(w, h, m, first, seed) {
-    const n = w * h, N = new Array(n);
-    for (let i = 0; i < n; i++) { const x = i % w, y = (i / w) | 0, a = [];
-      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (!dx && !dy) continue;
-        const nx = x + dx, ny = y + dy; if (nx >= 0 && ny >= 0 && nx < w && ny < h) a.push(ny * w + nx); }
-      N[i] = a; }
-    const rand = rngF(seed), zone = new Uint8Array(n);
+  // ---------- no-guess boards ----------
+  // Shuffles layouts until solveFrom() clears one from the first click, nudging stuck mines between tries.
+  // A generator so it can run to the end in a worker, or a slice at a time on the page when workers are unavailable.
+  // Only a layout solveFrom() cleared comes back as ok; running out of time is reported, never handed over as a board.
+  function* genNoGuess(w, h, m, first, seed, limitMs) {
+    const n = w * h, N = nbTable(w, h), rand = rng(seed), zone = new Uint8Array(n);
     zone[first] = 1; for (const j of N[first]) zone[j] = 1;
     if (n - N[first].length - 1 < m) { zone.fill(0); zone[first] = 1; }
     const pool = []; for (let i = 0; i < n; i++) if (!zone[i]) pool.push(i);
-    const fresh = () => { const mm = new Uint8Array(n);
+    const fresh = () => {
+      const mm = new Uint8Array(n);
       for (let k = 0; k < m; k++) { const j = k + Math.floor(rand() * (pool.length - k)); const t = pool[k]; pool[k] = pool[j]; pool[j] = t; mm[pool[k]] = 1; }
-      return mm; };
-    function solve(mines) {
-      const cnt = new Uint8Array(n); for (let i = 0; i < n; i++) if (!mines[i]) { let s = 0; for (const j of N[i]) s += mines[j]; cnt[i] = s; }
-      const opened = new Uint8Array(n), flag = new Uint8Array(n); let openN = 0, flagN = 0;
-      const openc = i => { const st = [i]; while (st.length) { const k = st.pop(); if (opened[k]) continue; opened[k] = 1; openN++;
-        if (!cnt[k]) for (const j of N[k]) if (!opened[j]) st.push(j); } };
-      const mark = j => { if (!flag[j]) { flag[j] = 1; flagN++; } };
-      openc(first);
-      for (;;) {
-        let changed = false; const cons = [], seen = new Set();
-        for (let i = 0; i < n; i++) {
-          if (!opened[i] || !cnt[i]) continue;
-          const unk = []; let f = 0;
-          for (const j of N[i]) { if (flag[j]) f++; else if (!opened[j]) unk.push(j); }
-          if (!unk.length) continue;
-          const need = cnt[i] - f;
-          if (need === 0) { for (const j of unk) openc(j); changed = true; }
-          else if (need === unk.length) { for (const j of unk) mark(j); changed = true; }
-          else { const key = unk.join(",") + ":" + need; if (!seen.has(key)) { seen.add(key); cons.push([unk, need]); } }
-        }
-        if (changed) continue;
-        // subset rule: if A's cells sit inside B, then B minus A holds needB - needA mines
-        const byCell = new Map();
-        cons.forEach((c, k) => { for (const x of c[0]) { let l = byCell.get(x); if (!l) byCell.set(x, l = []); l.push(k); } });
-        outer: for (let a = 0; a < cons.length; a++) {
-          const [ca, na] = cons[a], cand = new Set();
-          for (const x of ca) for (const b of byCell.get(x)) if (b !== a) cand.add(b);
-          for (const b of cand) {
-            const [cb, nb] = cons[b];
-            if (ca.length >= cb.length || !ca.every(x => cb.includes(x))) continue;
-            const diff = cb.filter(x => !ca.includes(x)), d = nb - na;
-            if (d === 0) { for (const j of diff) if (!opened[j]) { openc(j); changed = true; } }
-            else if (d === diff.length) { for (const j of diff) if (!flag[j]) { mark(j); changed = true; } }
-            if (changed) break outer;
-          }
-        }
-        if (changed) continue;
-        // mine counter: no mines left means every hidden cell is safe, and vice versa
-        const hidden = n - openN - flagN, left = m - flagN;
-        if (hidden && left === 0) { for (let i = 0; i < n; i++) if (!opened[i] && !flag[i]) openc(i); continue; }
-        if (hidden && left === hidden) { for (let i = 0; i < n; i++) if (!opened[i] && !flag[i]) mark(i); continue; }
-        break;
-      }
-      return { solved: openN === n - m, opened, flag };
-    }
-    const t0 = Date.now(); let mines = fresh(), tries = 0;
+      return mm;
+    };
+    const t0 = Date.now(), buf = {};
+    yield;
+    let layout = fresh(), tries = 0;
     for (;;) {
       tries++;
-      const r = solve(mines);
-      if (r.solved) return { mines, tries, ms: Date.now() - t0 };
-      if (Date.now() - t0 > 20000) return { mines, tries, ms: Date.now() - t0, gaveUp: true };
+      const r = yield* solveSteps(N, m, layout, first, null, buf);
+      if (r.solved) return { ok: true, mines: layout, tries, ms: Date.now() - t0 };
+      if (Date.now() - t0 > limitMs) return { ok: false, reason: "timeout", tries, ms: Date.now() - t0 };
       const stuck = [], spare = [];
       for (let i = 0; i < n; i++) {
         if (r.opened[i] || zone[i]) continue;
-        if (N[i].some(j => r.opened[j])) { if (mines[i] && !r.flag[i]) stuck.push(i); }
-        else if (!mines[i]) spare.push(i);
+        let edge = false;
+        for (const j of N[i]) if (r.opened[j]) { edge = true; break; }
+        if (edge) { if (layout[i] && !r.mine[i]) stuck.push(i); }
+        else if (!layout[i]) spare.push(i);
       }
       if (stuck.length && spare.length && tries % 60) {
         const a = stuck[Math.floor(rand() * stuck.length)], b = spare[Math.floor(rand() * spare.length)];
-        mines[a] = 0; mines[b] = 1;
-      } else mines = fresh();
+        layout[a] = 0; layout[b] = 1;
+      } else layout = fresh();
+      yield tries;
     }
   }
-  self.onmessage = e => { const d = e.data; postMessage(genNoGuess(d.w, d.h, d.m, d.first, d.seed)); };`;
-  let genWorker = null, generating = false;
-  function generateNoGuess(first) {
-    generating = true;
-    setStatus("generating", null, "info");
-    const job = { w: cfg.w, h: cfg.h, m: cfg.m, first, seed: gameNo * 7919 + first };
-    const done = res => {
-      genWorker = null; generating = false;
-      mines = res.mines; computeCounts(); savedMines = mines.slice();
-      begin(); reveal(first); checkWin();
+  const GEN_SRC = [rng, nbTable, deduce, solveSteps, genNoGuess].join("\n") + `
+  self.onmessage = e => {
+    const d = e.data, it = genNoGuess(d.w, d.h, d.m, d.first, d.seed, d.limit);
+    let r; do r = it.next(); while (!r.done);
+    postMessage({ id: d.id, ...r.value });
+  };`;
+  let genLimitMs = 20000, genGraceMs = 5000;   // the generator's own time limit, and how much longer the page waits for an answer
+  let gen = null, genSeq = 0, workerBroken = false;   // gen: the job in progress { id, first, stop }
+
+  function cancelGen() { if (gen) { gen.stop(); gen = null; } }
+
+  // Two stages, both cancellable through gen.stop(): build (in a worker, or in slices here), then check the answer
+  // here — right shape, and the solver clears it from the first click, replayed in slices — before the game starts.
+  function generateNoGuess(first, opts = {}) {
+    cancelGen();
+    const id = ++genSeq, job = { id, w: cfg.w, h: cfg.h, m: cfg.m, first, seed: gameNo * 7919 + first, limit: genLimitMs };
+    let worker = null, url = null, timer = null, stopSlices = null;
+    const stop = () => {   // ends the job however far it got: worker, blob URL, timer and slices all go
+      clearTimeout(timer); timer = null;
+      if (stopSlices) { stopSlices(); stopSlices = null; }
+      if (worker) { worker.onmessage = worker.onerror = worker.onmessageerror = null; worker.terminate(); worker = null; }
+      if (url) { URL.revokeObjectURL(url); url = null; }
     };
-    try {
-      genWorker = new Worker(URL.createObjectURL(new Blob([NOGUESS_SRC], { type: "text/javascript" })));
-      genWorker.onmessage = e => { genWorker.terminate(); done(e.data); };
-      genWorker.postMessage(job);
-    } catch {  // workers unavailable: run it here (the page pauses briefly)
-      const self = {}; const gen = new Function("self", "postMessage", NOGUESS_SRC + "; return genNoGuess;")(self, () => {});
-      done(gen(job.w, job.h, job.m, job.first, job.seed));
+    const current = () => gen && gen.id === id;   // false once a newer game, level or mode took over
+    const fail = reason => {
+      cancelGen();
+      setStatus(reason === "timeout" ? "genTimeout" : "genError", null, "lose",
+        { key: "genRetry", run: () => { if (opts.daily) startDaily(cfg.date); else { newGame(); generateNoGuess(first); } } });
+    };
+    const verify = res => {
+      if (!current()) return;
+      stop();
+      const n = job.w * job.h, mm = res && res.mines;
+      const shaped = res && res.ok && mm instanceof Uint8Array && mm.length === n && !mm[first]
+        && mm.every(v => v === 0 || v === 1) && mm.reduce((a, b) => a + b, 0) === job.m
+        && cfg.w === job.w && cfg.h === job.h && cfg.m === job.m;
+      if (!shaped) { fail(res && res.reason); return; }
+      stopSlices = runSliced(solveSteps(nbs(), job.m, mm, first), 8,
+        r => { if (!current()) return; if (!r.solved) { fail("error"); return; } gen = null; applyNoGuess(job, mm, opts); },
+        () => { if (current()) fail("error"); });
+    };
+    gen = { id, first, stop };
+    setStatus("generating", null, "info", { key: "genCancel", run: () => { cancelGen(); setStatus("genCanceled", null, "info"); } });
+    if (!workerBroken) {
+      try {
+        url = URL.createObjectURL(new Blob([GEN_SRC], { type: "text/javascript" }));
+        worker = new Worker(url);
+      } catch { stop(); worker = null; workerBroken = true; }
     }
+    if (worker) {
+      worker.onmessage = e => verify(e.data && e.data.id === id ? e.data : { ok: false, reason: "error" });
+      worker.onerror = e => { e.preventDefault(); workerBroken = true; verify({ ok: false, reason: "error" }); };
+      worker.onmessageerror = () => verify({ ok: false, reason: "error" });
+      timer = setTimeout(() => verify({ ok: false, reason: "timeout" }), job.limit + genGraceMs);
+      worker.postMessage(job);
+      return;
+    }
+    // No worker: run the same generator here in slices, so the page keeps answering clicks and keys.
+    stopSlices = runSliced(genNoGuess(job.w, job.h, job.m, first, job.seed, job.limit), 8, verify, () => verify({ ok: false, reason: "error" }));
+  }
+
+  function applyNoGuess(job, mm, opts = {}) {
+    mines = mm; computeCounts(); savedMines = mines.slice();
+    firstClick = job.first; firstGuard = guardFor(job.first).length;
+    if (opts.daily) {   // shown with the center open; the clock starts with the player's first move
+      firstGuard = neighbors(job.first).length + 1;
+      reveal(job.first); clicks = 1;
+      const best = dailyLog[cfg.date]?.best;
+      setStatus(best != null ? "dailyBest" : "dailyReady", best != null ? fmt(best) : cfg.date, "info");
+      return;
+    }
+    begin(); reveal(job.first);
+    if (firstGuard === 1) setStatus("denseFirst", null, "info");
+    checkWin();
   }
 
   // ---------- game mode ----------
@@ -940,19 +1442,23 @@
 
 
   // ---------- start by game number ----------
-  $("byNumber").addEventListener("click", () => { $("numForm").hidden = !$("numForm").hidden; $("numErr").hidden = true; if (!$("numForm").hidden) $("numIn").focus(); });
+  $("byNumber").addEventListener("click", () => {
+    $("numForm").hidden = $("numHelp").hidden = !$("numForm").hidden; $("numErr").hidden = true;
+    if (!$("numForm").hidden) $("numIn").focus();
+  });
   $("numForm").addEventListener("submit", e => {
     e.preventDefault();
     const v = Math.round(+$("numIn").value);
     if (!(v >= 1 && v <= 999999)) { $("numErr").textContent = L().numErr; $("numErr").hidden = false; return; }
-    $("numErr").hidden = true; $("numForm").hidden = true;
+    $("numErr").hidden = true; $("numForm").hidden = $("numHelp").hidden = true;
     if (editing) closeEditor(false);
     newGame(v);
   });
 
   // ---------- board editor ----------
   let editing = false, editMines = null;
-  const SITE = /(^|\.)playmined\.com$/.test(location.hostname);
+  const SITE_HOST = "playmined.com";   // set-domain.sh rewrites this; build_langs.py checks it matches CNAME
+  const SITE = location.hostname === SITE_HOST || location.hostname.endsWith("." + SITE_HOST);
   const b64 = { enc: bytes => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""),
                 dec: s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0)) };
   function encodeBoard(w, h, mm) {
@@ -962,13 +1468,16 @@
   }
   function decodeBoard(text) {
     let code = String(text || "").trim();
+    if (code.length > 4096) return null;   // the largest board (100×60) needs about 1,000 characters
     try { const u = new URL(code); code = u.searchParams.get("board") || code; } catch {}
     const m = /^(\d{1,3})x(\d{1,3})\.([A-Za-z0-9_-]+)$/.exec(code);
     if (!m) return null;
     const w = +m[1], h = +m[2];
     if (w < 5 || w > 100 || h < 5 || h > 60) return null;
+    const size = Math.ceil(w * h / 8);
+    if (m[3].length !== Math.ceil(size * 4 / 3)) return null;   // unpadded base64 length for exactly this many bytes
     let bytes; try { bytes = b64.dec(m[3]); } catch { return null; }
-    if (bytes.length !== Math.ceil(w * h / 8)) return null;
+    if (bytes.length !== size) return null;
     const mm = new Uint8Array(w * h);
     for (let i = 0; i < w * h; i++) mm[i] = (bytes[i >> 3] >> (i & 7)) & 1;
     const count = mm.reduce((a, b) => a + b, 0);
@@ -985,38 +1494,43 @@
     $("minesLeft").textContent = m.toLocaleString();
     $("cellsLeft").textContent = (cfg.w * cfg.h - m).toLocaleString();
   }
+  // While editing, the board holds only editMines: the last game's layout is dropped so nothing can replay it at the wrong size.
+  function setEditing(on) {
+    editing = on;
+    $("restart").disabled = $("hint").disabled = on;
+    $("editBar").hidden = !on; $("t-controls").hidden = on;
+  }
   function openEditor(preset) {
     if (cfg.key === "edited") cfg = { key: "custom", w: cfg.w, h: cfg.h, m: cfg.m };
     if (preset) cfg = { key: "custom", w: preset.w, h: preset.h, m: preset.m };
     buildBoard();                          // clears any running game (its time is banked)
-    editing = true;
+    mines = counts = savedMines = null; firstClick = null; firstGuard = 0; gameNo = 0;
+    setEditing(true);
     editMines = preset ? preset.mines.slice() : new Uint8Array(cfg.w * cfg.h);
-    editMines.forEach((v, i) => cells[i].classList.toggle("emine", !!v));
-    $("editBar").hidden = false; $("t-controls").hidden = true;
+    editMines.forEach((v, i) => { if (v) { cells[i].classList.add("emine"); labelCell(i); } });
     setStatus(null); setEditMsg(null);
     paintEditor();
   }
   function closeEditor(rebuild = true) {
-    editing = false; editMines = null;
-    $("editBar").hidden = true; $("t-controls").hidden = false;
+    setEditing(false); editMines = null;
     if (rebuild) newGame();
   }
   function toggleEditMine(i) {
-    editMines[i] ^= 1; cells[i].classList.toggle("emine", !!editMines[i]);
+    editMines[i] ^= 1; cells[i].classList.toggle("emine", !!editMines[i]); labelCell(i);
     setEditMsg(null); paintEditor();
   }
   function playEdited(mm, w, h, shared) {
     const m = mm.reduce((a, b) => a + b, 0);
-    if (m < 1 || m >= w * h) { setEditMsg("editNeed", "bad"); return; }
-    editing = false; editMines = null;
-    $("editBar").hidden = true; $("t-controls").hidden = false;
+    if (m < 1 || m >= w * h || mm.length !== w * h) { setEditMsg("editNeed", "bad"); return; }
+    setEditing(false); editMines = null;
     cfg = { key: "edited", w, h, m };
-    mines = mm.slice(); savedMines = mm.slice(); gameNo = 0;
-    buildBoard(); computeCounts(); markLevel(); fitZoom();
-    setStatus(shared ? "sharedBoard" : null, null, "info");
+    buildBoard();                          // banks a running game's time to that game's own entry
+    mines = mm.slice(); savedMines = mm.slice(); gameNo = 0; firstClick = null; firstGuard = 0;
+    computeCounts(); markLevel(); fitZoom();
+    setStatus(shared ? "sharedBoard" : "editedNote", null, "info");
   }
   $("editorBtn").addEventListener("click", () => { editing ? closeEditor() : (openEditor(), fitZoom()); });
-  $("editClear").addEventListener("click", () => { editMines.fill(0); cells.forEach(c => c.classList.remove("emine")); paintEditor(); });
+  $("editClear").addEventListener("click", () => { editMines.fill(0); cells.forEach((c, i) => { c.classList.remove("emine"); labelCell(i); }); paintEditor(); });
   $("editPlay").addEventListener("click", () => playEdited(editMines, cfg.w, cfg.h, false));
   $("editExit").addEventListener("click", () => closeEditor());
   $("editCopy").addEventListener("click", async () => {
@@ -1059,6 +1573,7 @@
   function markLevel() {
     const showing = $("custom").hidden ? cfg.key : "custom";
     $("levels").querySelectorAll(".mi").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.level === showing)));
+    $("dailyBtn").setAttribute("aria-pressed", String(cfg.key === "daily"));
   }
   function chooseLevel(key) {
     if (key === "custom") { $("custom").hidden = false; markLevel(); $("cw").focus(); return; }
@@ -1071,8 +1586,8 @@
 
   function paintHud() {
     $("lvlLabel").textContent = levelName();
-    $("modeLabel").textContent = cfg.key === "edited" ? L().editedBoard : L().gm[gameMode];
-    $("gameNo").textContent = gameNo || "—";
+    $("modeLabel").textContent = cfg.key === "edited" ? L().editedBoard : L().gm[cfg.key === "daily" ? "noguess" : gameMode];
+    $("gameNo").textContent = cfg.key === "daily" ? cfg.date : gameNo || "—";
     paintCounts();
   }
 
@@ -1084,12 +1599,18 @@
       "t-view": t.view, "t-fb": t.fb, "fbSend": t.fbSend, "modeLight": t.modeLight, "modeDark": t.modeDark, "zoomFit": t.fit, "t-help": t.help, "t-hint": t.hint, "t-stats": t.stats, "t-lang": t.lang,
       "t-time": t.time + ":", "t-diff": t.diff + ":", "t-mode": t.mode + ":", "t-gameNo": t.gameNo + ":",
       "t-minesLeft": t.minesLeft + ":", "t-cellsLeft": t.cellsLeft + ":", "t-w": t.w, "t-h": t.h, "t-m": t.m, "t-start": t.start,
-      "t-controls": t.controls, "t-statsTitle": t.statsTitle, "statsClose": t.close, "statsReset": t.reset,
+      "t-controls": matchMedia("(pointer: coarse)").matches ? t.controlsTouch : t.controls, "t-statsTitle": t.statsTitle, "statsClose": t.close, "statsReset": t.reset,
       "statsReset2": t.resetYes, "resetAsk": t.resetAsk };
     for (const [id, text] of Object.entries(map)) $(id).textContent = text;
     $("langs").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
     for (const [id, k] of [["zoomFit", "fit"], ["byNumber", "byNumber"], ["editorBtn", "editor"], ["hint", "hint"], ["statsBtn", "stats"]]) $(id).title = t.tip[k];
-    renderLevels(); renderGameModes(); paintHud(); paintStatus(); paintEditorText(); renderAbout();
+    $("restart").title = t.restartTip; $("numHelp").textContent = t.numHelp;
+    $("t-pause").textContent = t.pause; $("pauseBtn").title = t.tipX.pause; $("t-daily").textContent = t.daily; $("dailyBtn").title = t.tipX.daily;
+    $("board").dataset.pause = t.pauseCover; $("t-hold").textContent = t.hold; $("holdSet").title = t.tipX.hold;
+    $("holdSet").querySelector('[data-hold="0"]').textContent = t.holdOff; paintWinStats();
+    $("board").setAttribute("aria-label", t.board); $("touchMode").setAttribute("aria-label", t.tm.label);
+    $("touchMode").querySelectorAll("button").forEach(b => { b.textContent = t.tm[b.dataset.tm]; });
+    renderLevels(); renderGameModes(); paintHud(); paintStatus(); paintEditorText(); renderAbout(); labelAll();
     $("fbText").placeholder = t.fbPh; if (fbNoteKey) setFbNote(fbNoteKey, fbNoteCls);
     if (!$("statsDlg").hidden) renderStats();
   }
@@ -1104,51 +1625,152 @@
       if (!k.startsWith("custom-") || (sfx ? !k.endsWith(sfx) : k.includes("@"))) continue;
       rows.push([`${t.lv.custom} ${k.slice(7, sfx ? -sfx.length : undefined).replace("x", "×").replace("-", "·")}`, s]);
     }
+    if (stats.daily) rows.push([t.daily, stats.daily]);   // one row for every mode: the daily board is always no-guess
     $("statsTable").innerHTML = `<thead><tr>${t.cols.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>` +
       rows.map(([name, s]) => {
         const p = s?.played || 0, w = s?.won || 0;
-        return `<tr><td></td><td><b>${p}</b></td><td><b>${w}</b></td><td><b>${p ? Math.round(w / p * 100) + "%" : "—"}</b></td><td><b>${s?.best != null ? fmt(s.best) : "—"}</b></td><td><b>${hms(s?.time)}</b></td></tr>`;
+        return `<tr><td></td><td><b>${p}</b></td><td><b>${w}</b></td><td><b>${p ? Math.round(w / p * 100) + "%" : "—"}</b></td><td><b>${s?.best != null ? fmt(s.best) : "—"}</b></td><td><b>${s?.bps != null ? s.bps.toFixed(2) : "—"}</b></td><td><b>${hms(s?.time)}</b></td></tr>`;
       }).join("") + "</tbody>";
     $("statsTable").querySelectorAll("tbody tr").forEach((tr, i) => { tr.firstChild.textContent = rows[i][0]; });
   }
-  function openStats() { $("resetAsk").hidden = true; $("statsReset2").hidden = true; $("statsReset").hidden = false; renderStats(); $("statsDlg").hidden = false; $("statsClose").focus(); }
-  function closeStats() { $("statsDlg").hidden = true; }
+  // Modal: the page behind is hidden from assistive tech, Tab stays inside (trapTab), the scrim takes the pointer,
+  // and focus returns where it was. The board area gets aria-hidden rather than inert: making 6,000 cells inert
+  // costs a full style pass (~16 ms on 100×60) on open and again on close.
+  let statsReturn = null;
+  const BEHIND = ["menu", "about", "intro"];
+  function openStats() {
+    if (!$("statsDlg").hidden) return;
+    statsReturn = document.activeElement;
+    $("resetAsk").hidden = true; $("statsReset2").hidden = true; $("statsReset").hidden = false; renderStats();
+    $("statsDlg").hidden = false; BEHIND.forEach(id => { $(id).inert = true; });
+    $("statsClose").focus();
+    $("stage").setAttribute("aria-hidden", "true");   // after focus has left it
+  }
+  function closeStats() {
+    if ($("statsDlg").hidden) return;
+    $("statsDlg").hidden = true; BEHIND.forEach(id => { $(id).inert = false; });
+    $("stage").removeAttribute("aria-hidden");
+    const back = statsReturn?.isConnected ? statsReturn : (cells[focusIdx] || $("statsBtn"));
+    statsReturn = null;
+    back.focus({ preventScroll: true });
+  }
+  function trapTab(e) {
+    const f = [...$("statsDlg").querySelectorAll("button")].filter(b => !b.hidden);
+    const k = f.indexOf(document.activeElement);
+    e.preventDefault();
+    f[(k + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+  }
 
   // ---------- input ----------
   const board = $("board");
+  const live = () => !over && !gen && !editing && !paused;
+  let swallowClick = false, chordPress = false, lastPointer = "mouse", hold = null;
   board.addEventListener("click", e => {
+    if (paused) { resume(); return; }
+    if (swallowClick || chordPress) { swallowClick = false; return; }   // a long-press flag or a two-button chord already acted
     const c = e.target.closest(".cell"); if (!c) return;
     const i = +c.dataset.i;
+    focusCell(i);
     if (editing) { toggleEditMine(i); return; }
-    open[i] ? chord(i) : openCell(i);
+    if (live()) clicks++;
+    if (open[i]) chord(i); else if (touchMode === "flag") toggleFlag(i); else openCell(i);
   });
+  // Classic chording: press both buttons over a number and let go (either order), or click it with the middle button.
+  board.addEventListener("mousedown", e => {
+    if (e.button === 1) e.preventDefault();   // no autoscroll
+    if ((e.buttons & 3) === 3) chordPress = true;
+  });
+  board.addEventListener("mouseup", e => {
+    if (!chordPress || e.buttons !== 0) return;
+    chordPress = false; swallowClick = true;
+    const c = e.target.closest(".cell");
+    if (c && !editing && open[+c.dataset.i]) { if (live()) clicks++; chord(+c.dataset.i); }
+  });
+  board.addEventListener("auxclick", e => {
+    const c = e.target.closest(".cell");
+    if (e.button !== 1 || !c || editing || !open[+c.dataset.i]) return;
+    if (live()) clicks++;
+    chord(+c.dataset.i);
+  });
+  // Touch: hold a closed cell to flag it. A ring fills while holding; moving the finger (a scroll) cancels;
+  // a short buzz confirms, and the tap that follows the release is swallowed so it can't open the cell.
+  const HOLDS = [0, 200, 300, 500];
+  let holdMs = read("minesweeper-hold", 300);
+  if (!HOLDS.includes(holdMs)) holdMs = 300;
+  function paintHold() { $("holdSet").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.hold === holdMs))); }
+  const endHold = () => { if (hold) { clearTimeout(hold.timer); hold.c.classList.remove("holding"); hold = null; } };
+  board.addEventListener("pointerdown", e => {
+    lastPointer = e.pointerType; swallowClick = false;
+    if (e.pointerType === "mouse" || !holdMs || paused) return;
+    const c = e.target.closest(".cell"); if (!c) return;
+    const i = +c.dataset.i;
+    if (!editing && (open[i] || !live())) return;
+    endHold();
+    c.style.setProperty("--hold", holdMs + "ms"); c.classList.add("holding");
+    hold = { c, x: e.clientX, y: e.clientY, timer: setTimeout(() => {
+      endHold(); swallowClick = true;
+      if (editing) toggleEditMine(i); else { clicks++; toggleFlag(i); }
+      navigator.vibrate?.(12);
+    }, holdMs) };
+  });
+  board.addEventListener("pointermove", e => { if (hold && Math.hypot(e.clientX - hold.x, e.clientY - hold.y) > 10) endHold(); });
+  for (const type of ["pointerup", "pointercancel", "pointerleave"]) board.addEventListener(type, endHold);
+  $("holdSet").addEventListener("click", e => {
+    const b = e.target.closest("button[data-hold]"); if (!b) return;
+    holdMs = +b.dataset.hold; write("minesweeper-hold", holdMs); paintHold();
+  });
+  paintHold();
+  $("touchMode").addEventListener("click", e => {
+    const b = e.target.closest("button[data-tm]"); if (!b) return;
+    touchMode = b.dataset.tm;
+    $("touchMode").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  });
+  $("statusAct").addEventListener("click", () => { if (statusAct) statusAct.run(); });
   board.addEventListener("contextmenu", e => {
     const c = e.target.closest(".cell"); if (!c) return;
     e.preventDefault();
-    editing ? toggleEditMine(+c.dataset.i) : toggleFlag(+c.dataset.i);
+    // a touch long-press is handled by the hold timer above; while both buttons are down it is a chord
+    if ((e.pointerType || lastPointer) !== "mouse" || chordPress) return;
+    if (editing) { toggleEditMine(+c.dataset.i); return; }
+    if (live() && !open[+c.dataset.i]) clicks++;
+    toggleFlag(+c.dataset.i);
   });
 
   let hovered = null, spaceHandled = false;
   board.addEventListener("mouseover", e => { hovered = e.target.closest(".cell"); });
   board.addEventListener("mouseleave", () => { hovered = null; });
 
+  // Arrow keys move between cells (one cell is in the Tab order at a time); Home/End jump to the row's ends.
+  const MOVES = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+  function moveFocus(i, key) {
+    let x = i % cfg.w, y = (i / cfg.w) | 0;
+    if (key === "Home") x = 0; else if (key === "End") x = cfg.w - 1;
+    else { x = Math.max(0, Math.min(cfg.w - 1, x + MOVES[key][0])); y = Math.max(0, Math.min(cfg.h - 1, y + MOVES[key][1])); }
+    focusCell(y * cfg.w + x, true);
+  }
   document.addEventListener("keydown", e => {
-    if (e.target.closest("input, form") || e.metaKey || e.ctrlKey || e.altKey) return;
-    if (e.target.closest("textarea")) return;
-    if (!$("statsDlg").hidden) { if (e.key === "Escape") closeStats(); return; }
+    swallowClick = false;   // a key's click (Enter on a cell) is never a leftover of a mouse chord
+    if (!$("statsDlg").hidden) { if (e.key === "Escape") closeStats(); else if (e.key === "Tab") trapTab(e); return; }
+    const tgt = e.target instanceof Element ? e.target : document.body;
+    if (tgt.closest("input, form, textarea") || e.metaKey || e.ctrlKey || e.altKey) return;
+    const fc = document.activeElement?.closest?.(".cell");
+    if (fc && (MOVES[e.key] || e.key === "Home" || e.key === "End")) { e.preventDefault(); hovered = null; moveFocus(+fc.dataset.i, e.key); return; }
     if (e.code === "Space") {
       const c = (hovered?.isConnected && hovered) || document.activeElement?.closest?.(".cell");
       if (!c) return;
       e.preventDefault(); spaceHandled = true;
       if (e.repeat) return;
       const i = +c.dataset.i;
+      if (paused) { resume(); return; }
+      if (live()) clicks++;
       if (editing) toggleEditMine(i); else open[i] ? chord(i) : toggleFlag(i);
       return;
     }
     if (editing) return;
     // Match the physical key (e.code) so shortcuts work in Korean/Japanese/Chinese input mode too.
     const c = e.code;
-    if (c === "KeyN") newGame();
+    if (c === "KeyN" || c === "F2") newGame();
+    else if (c === "KeyP") paused ? resume() : pause();
     else if (c === "KeyR") restart();
     else if (c === "KeyH") hint();
     else if (c === "KeyS") openStats();
@@ -1160,13 +1782,21 @@
   document.addEventListener("keyup", e => { if (e.code === "Space" && spaceHandled) { e.preventDefault(); spaceHandled = false; } });
 
   $("newGame").addEventListener("click", newGame);
+  $("pauseBtn").addEventListener("click", () => paused ? resume() : pause());
+  $("dailyBtn").addEventListener("click", () => startDaily());
+  document.addEventListener("visibilitychange", () => { if (document.hidden) pause(); });
   $("restart").addEventListener("click", restart);
   $("hint").addEventListener("click", hint);
   $("statsBtn").addEventListener("click", openStats);
   $("statsClose").addEventListener("click", closeStats);
   $("statsDlg").addEventListener("click", e => { if (e.target === $("statsDlg")) closeStats(); });
   $("statsReset").addEventListener("click", () => { $("resetAsk").hidden = false; $("statsReset2").hidden = false; $("statsReset").hidden = true; });
-  $("statsReset2").addEventListener("click", () => { stats = {}; write(STATS, stats); renderStats(); paintHud(); $("resetAsk").hidden = true; $("statsReset2").hidden = true; $("statsReset").hidden = false; });
+  $("statsReset").addEventListener("click", () => $("statsReset2").focus());
+  // Reset clears everything, the game in progress included: it stops counting (no win, no time) so won never exceeds played.
+  $("statsReset2").addEventListener("click", () => {
+    stats = {}; activeKey = null; write(STATS, stats); renderStats(); paintHud();
+    $("resetAsk").hidden = true; $("statsReset2").hidden = true; $("statsReset").hidden = false; $("statsReset").focus();
+  });
   $("zoomIn").addEventListener("click", () => zoom(1));
   $("zoomOut").addEventListener("click", () => zoom(-1));
   $("zoomFit").addEventListener("click", fitZoom);
@@ -1194,6 +1824,7 @@
   });
 
   addEventListener("pagehide", () => { if (started && !over) bankTime(); });
+  addEventListener("resize", placeBoard);
 
   const INTRO = "minesweeper-intro-seen";
   function hideIntro() { $("intro").hidden = true; write(INTRO, 1); }
@@ -1217,12 +1848,17 @@
   matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", paintModes);
   paintModes();
 
+  // ---------- offline / install (sw.js) ----------
+  if ("serviceWorker" in navigator && isSecureContext && /^https?:$/.test(location.protocol))
+    addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));   // missing on other hosts: fine
+
   // ---------- boot ----------
   newGame();
   applyLang();
   startZoom();
-  { const shared = new URLSearchParams(location.search).get("board"); const b = shared && decodeBoard(shared);
-    if (b) playEdited(b.mines, b.w, b.h, true); }
+  { const q = new URLSearchParams(location.search), shared = q.get("board"), b = shared && decodeBoard(shared);
+    if (b) playEdited(b.mines, b.w, b.h, true);
+    else if (q.has("daily")) startDaily(); }
 })();
 </script>
 

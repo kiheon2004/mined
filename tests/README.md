@@ -1,0 +1,89 @@
+# MINE:D 테스트
+
+실제 브라우저(Chromium, Firefox, WebKit)에서 게임을 띄워 확인하는 회귀 테스트와 성능 측정 도구입니다.
+게임 파일은 고치지 않습니다. 테스트용 로컬 서버가 `index.html`을 내줄 때만 게임 스크립트 끝에
+`window.__ev = s => eval(s)` 한 줄을 끼워 넣어, 테스트가 게임 내부 상태를 읽고 함수를 부를 수 있게 합니다
+(`harness.py`).
+
+## 준비 (처음 한 번)
+
+필요한 것: Python 3.9 이상, 인터넷 연결(브라우저 엔진 내려받기, 약 1.1GB).
+
+```sh
+# 저장소 루트에서
+python3 -m venv .venv
+.venv/bin/pip install -r tests/requirements.txt
+.venv/bin/playwright install chromium firefox webkit
+```
+
+- Linux에서는 엔진이 쓰는 시스템 라이브러리도 함께 설치하세요: `.venv/bin/playwright install --with-deps chromium firefox webkit`
+- Windows에서는 `.venv/bin/` 대신 `.venv\Scripts\`를 쓰세요.
+- 엔진은 사용자 캐시 폴더(macOS `~/Library/Caches/ms-playwright`, Linux `~/.cache/ms-playwright`,
+  Windows `%LOCALAPPDATA%\ms-playwright`)에 설치되고, 저장소에는 아무것도 생기지 않습니다(`.venv/`는 `.gitignore`에 있음).
+- 시스템에 설치된 Chrome·Safari·Firefox는 쓰지 않습니다. WebKit은 Safari와 같은 엔진이지만 Safari 앱 자체는 아닙니다.
+
+## 실행
+
+```sh
+.venv/bin/pytest tests --browser chromium                                     # 약 2분
+.venv/bin/pytest tests --browser chromium --browser firefox --browser webkit  # 세 엔진, 약 10분
+.venv/bin/pytest tests -k noguess --browser webkit                            # 이름으로 골라 실행
+.venv/bin/pytest tests --browser chromium --headed                            # 브라우저 창을 띄워서 보기
+```
+
+`index.html`을 고친 뒤에는 `python3 build_langs.py`를 먼저 실행하세요. 언어별 페이지가 원본과 다르면
+`test_language_pages_seo_and_play`가 실패합니다.
+
+## 무엇을 확인하나
+
+| 파일 | 내용 |
+|---|---|
+| `test_game.py` | 첫 클릭 보호(7개 난이도 모든 칸, 실제 클릭, 지뢰가 많은 판), 추측 불필요 판 생성(풀이 재생 검증, 시간 초과, 페이지 쪽 제한 시간, Worker 오류·잘못된 응답 7종, Worker 없을 때 분할 생성, 취소·새 게임·난이도·모드 변경, 페이지 쪽 재검증 중 취소, 생성 중 R/H/N), 재시작 정책, 힌트(열린 0 옆 잘못된 깃발, 완전 탐색과 비교한 추론 정확성, 추측 필요 판정, 예산 초과 시 "추측 필요"라고 하지 않음, 분할 검사 결과 일치, 진행 표시와 이동 시 취소, 힌트만으로 추측 불필요 판 끝내기), 통계 귀속과 초기화, 편집 중 상태, 저장 데이터 검증과 재로드, 공유 코드 길이 검사, 접근성(격자 구조, 이름, 방향키, Enter/Space, 통계 창 포커스, ARIA 모델), 터치 열기/깃발 전환과 끌어서 스크롤, 언어별 페이지 SEO와 동작 |
+| `test_features.py` | 플레이어 의견을 반영한 기능: 일시정지(시간 멈춤, 판 가림, 입력 차단, 탭 이탈 시 자동, P·F2), 3BV 계산(독립 구현과 300판 비교)과 승리 시 효율 줄·최고 3BV/s, 오늘의 판(날짜별 같은 판, 세 엔진 동일 지문, 첫 동작부터 시간, 기록·공유, `?daily` 링크, 재시작), 양쪽 버튼·가운데 버튼 코딩, 길게 눌러 깃발(누르는 중 표시, 움직이면 취소, 설정 저장, 터치 contextmenu 무시, Chromium 실제 터치), 앱 정보 파일과 오프라인 실행(Chromium) |
+| `test_compat.py` | 2026-10 수정 전 버전(커밋 `109b1da`)과 같은 게임 번호·첫 칸이면 같은 판이 나오는지(187개 조합, 추측 불필요 16개 포함), 공유 코드가 같은지, 공유 링크로 판이 열리는지. 기준값은 `fixtures/golden.json` |
+
+엔진별로 빠지는 것:
+
+- Chromium에서만: 실제 접근성 트리 확인(`test_accessibility_tree_names`, CDP 필요), 터치로 끌어 스크롤하기(CDP 제스처).
+- Firefox·WebKit의 접근성은 Playwright가 계산한 ARIA 모델로만 확인합니다(`test_aria_model_all_browsers`). 엔진 자체의 접근성 트리와 실제 화면 낭독기(VoiceOver, NVDA 등)는 이 테스트로 확인되지 않습니다.
+- 터치는 모두 에뮬레이션입니다. 실제 휴대폰은 확인하지 않습니다.
+
+## 기준값 다시 만들기 (`fixtures/golden.json`)
+
+판 생성 방식을 일부러 바꿨을 때만 다시 만드세요. 기존 게임 번호로 같은 판을 재현할 수 없게 됩니다.
+
+```sh
+.venv/bin/python tests/tools/make_golden.py              # 커밋 109b1da 기준 (git 필요)
+.venv/bin/python tests/tools/make_golden.py --ref HEAD   # 다른 버전 기준
+```
+
+## 성능 측정 (`tools/perf.py`)
+
+pass/fail 테스트가 아니라 수치를 보는 도구입니다. 실제 마우스·키 입력으로 80×50, 100×60 판에서 판 만들기,
+새 게임, 첫 클릭, 힌트, 패배 공개, 6000칸 연쇄 열기, 추측 불필요 생성(Worker 있음/없음), 생성 중 입력을 반복해서 잽니다.
+
+```sh
+.venv/bin/python tests/tools/perf.py                                   # 현재 버전, Chromium, 시나리오마다 15회
+.venv/bin/python tests/tools/perf.py --cpu 4 --cpu 6                   # CPU 4배·6배 느리게 (Chromium 에뮬레이션)
+.venv/bin/python tests/tools/perf.py --mobile --cpu 4                  # 휴대폰 크기 터치 화면 + CPU 4배 (에뮬레이션)
+.venv/bin/python tests/tools/perf.py --browser firefox --browser webkit
+git archive 109b1da | tar -x -C /tmp/old                               # 비교할 옛 버전 꺼내기
+.venv/bin/python tests/tools/perf.py --compare old=/tmp/old            # 같은 회차를 두 버전이 번갈아 실행
+```
+
+- 결과는 시나리오·지표마다 최솟값 / 중앙값 / p90 / 최댓값으로 출력되고, 원자료는 `tests/results/`(git 제외)에 JSON으로 저장됩니다.
+- 지표: `input_to_paint`(입력 시각부터 처리 후 첫 프레임까지, 모든 엔진), `event_timing`(브라우저가 잰 입력→다음 그리기, Event Timing을 지원하는 엔진에서. 16ms 미만은 16으로 표시),
+  `longest_task`(50ms 이상 작업, Chromium), `main_script/style/layout/paint`(Chrome 트레이스의 메인 스레드 시간, Chromium), `time_to_start`(추측 불필요 판 시작까지).
+- 컴퓨터가 바쁘면 수치가 크게 흔들립니다. 버전끼리 비교할 때는 `--compare`를 쓰세요. 같은 회차를 번갈아 재므로 부하 변화가 양쪽에 똑같이 걸립니다.
+
+### 분할 처리의 "8ms"는 목표입니다 (상한이 아님)
+
+Worker를 쓸 수 없을 때 추측 불필요 판 생성, 페이지 쪽 재검증, 힌트의 완전 탐색은 `runSliced`가 조각으로 나눠 실행합니다.
+한 조각은 8ms가 지난 뒤 처음 만나는 양보 지점(생성기의 `yield`)에서 끝납니다. 그래서 조각 길이는
+"8ms + 진행 중이던 한 단계"이고, 한 단계가 길면 그만큼 넘칩니다. 단계는 짧게 유지합니다
+(풀이 한 라운드는 경계 칸만 읽고, 완전 탐색은 4096단계마다 양보). 테스트 `test_noguess_without_workers_runs_in_short_steps`가
+단계 길이의 p99가 8ms 미만인지, 최댓값이 100ms 미만인지 확인합니다(최댓값은 GC나 바쁜 컴퓨터 때문에 늘어날 수 있어 느슨하게 둡니다).
+조각 사이의 화면 그리기와 입력 처리 시간은 여기에 포함되지 않습니다.
+
+다음 조각은 브라우저에 작업 스케줄러가 있으면 `scheduler.postTask`의 낮은 우선순위(background)로, 없으면
+`MessageChannel` 작업으로 예약합니다. `setTimeout(0)`은 연속 호출 시 4ms씩 쉬게 되어 쓰지 않습니다.
