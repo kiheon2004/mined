@@ -430,14 +430,14 @@ FIFTY_FIFTY = r"""
 
 
 def test_hint_guess_only_when_proven(game):
+    """A proven 50/50: the hint says a guess is needed and, knowing the chances, points at one of the two cells."""
     o = game.run(FIFTY_FIFTY + r"""
       $("hint").click();
       await until(() => !E("hintStop"), 5000);
-      const proven = status();
-      assert(proven === T("noLogic"), "proven: " + proven);
-      return { proven };
+      const lit = E("cells").findIndex(c => c.classList.contains("hint-guess"));
+      return { key: E("statusKey"), text: status(), want: T("hintGuess")(50), lit, pair: [found.a, found.b], used: E("hintUsed") };
     """)
-    assert o["proven"]
+    assert o["key"] == "hintGuess" and o["text"] == o["want"] and "50%" in o["text"] and o["lit"] in o["pair"] and o["used"], o
 
 
 def test_hint_budget_cut_never_claims_a_guess(game):
@@ -738,11 +738,15 @@ def test_touch_open_flag_switch(browser, server, browser_name):
         assert r["shown"] != "none" and r["ta"] == "manipulation", r
         box = lambda i: g.page.evaluate(f"(() => {{ const r = window.__ev('cells')[{i}].getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; }})()")
         g.page.tap('[data-tm="flag"]')
-        x, y = box(0); g.page.touchscreen.tap(x, y)
-        assert g.ev("flags[0]") == 1 and not g.ev("started")
+        x, y = box(40); g.page.touchscreen.tap(x, y)          # an untouched board has nothing to flag: the first tap opens
+        assert g.ev("started") and g.ev("open[40]") == 1 and g.ev("flagCount") == 0
+        i = g.ev("cells.findIndex((c, k) => !open[k])")
+        x, y = box(i); g.page.touchscreen.tap(x, y)            # from then on a tap in flag mode flags
+        assert g.ev(f"flags[{i}]") == 1 and not g.ev(f"open[{i}]") and not g.ev("over")
         g.page.tap('[data-tm="open"]')
-        x, y = box(40); g.page.touchscreen.tap(x, y)
-        assert g.ev("started")
+        j = g.ev("cells.findIndex((c, k) => !open[k] && !flags[k] && !mines[k])")
+        x, y = box(j); g.page.touchscreen.tap(x, y)
+        assert g.ev(f"open[{j}]") == 1 and not g.ev("over")
         if browser_name == "chromium":
             g.run('level("expert"); E("newGame(13)"); window.scrollTo(0, 0); document.body.scrollTop = 0;')
             x, y = box(100)

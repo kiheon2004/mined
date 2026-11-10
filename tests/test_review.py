@@ -290,6 +290,7 @@ def test_phone_menu_text_keeps_its_contrast(browser, server, browser_name, schem
         g = Game(ctx.new_page(), server.url).goto("/")
         r = g.run(r"""
           const rgb = s => s.match(/[\d.]+/g).slice(0, 3).map(Number);
+          $("menuToggle").click();     // unfold the phone menu
           let fade = 1; for (let el = document.querySelector(".mi"); el; el = el.parentElement) fade *= +getComputedStyle(el).opacity;
           return { strip: getComputedStyle($("menu")).position, fade, bg: rgb(getComputedStyle(document.body).backgroundColor),
                    item: rgb(getComputedStyle(document.querySelector('.mi[aria-pressed="false"]')).color),
