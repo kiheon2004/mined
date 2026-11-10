@@ -496,8 +496,8 @@ def test_hint_exact_check_in_slices_matches_one_go(game):
 def test_hint_check_shows_progress_and_a_move_cancels_it(game):
     o = game.run(r"""
       gmode("safe"); level("expert"); E("newGame(7)"); E("cells")[245].click();
-      // pretend the rules are stuck and the exhaustive check is slow (40 steps of 6 ms)
-      E(`hintRules = () => null; exactSteps = function* () { for (let i = 0; i < 40; i++) { const t = performance.now(); while (performance.now() - t < 6); yield; } return { complete: true, safe: [], mines: [] }; }`);
+      // pretend the rules are stuck and the exhaustive check is slow (80 steps of 6 ms: still running well past the 200 ms look below)
+      E(`hintRules = () => null; exactSteps = function* () { for (let i = 0; i < 80; i++) { const t = performance.now(); while (performance.now() - t < 6); yield; } return { complete: true, safe: [], mines: [] }; }`);
       $("hint").click();
       await sleep(200);
       const during = status(), running = !!E("hintStop");

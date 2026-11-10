@@ -34,7 +34,10 @@
 <!-- seo:end -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&family=JetBrains+Mono:wght@700;800&display=swap">
+<!-- The web fonts must never hold the game back: an ordinary stylesheet link blocks drawing and the game script until it
+     answers, so a slow or unreachable font server meant a blank page. Loaded as "print" it blocks nothing; once it arrives it
+     applies to the screen and the text swaps from the system fonts. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&family=JetBrains+Mono:wght@700;800&display=swap" media="print" onload="this.media='all'">
 <style>
   /* Layout: the minefield sits dead-center of the page; a faint vertical menu floats on the left and wakes on hover. */
   /* Light = soft paper-toned board (dimmer open cells, less glare), dark = palette B (slate board). Tile edges and numbers meet WCAG 3:1 / 4.5:1. */
@@ -165,7 +168,7 @@
   .hud dd { margin: 0; font-weight: 600; }
   .hud .r { text-align: left; }
   .hud dd.r { text-align: right; font-family: var(--font-num); font-weight: 700; }
-  .hud .gap { grid-column: 3; }
+  .hud dt.r { grid-column: 4; }   /* column 3 is the flexible gap between the two halves */
   .status { min-height: 1.4em; margin: 0; text-align: center; font-weight: 600; font-size: 14px; }
   .status.win { color: var(--n2); } .status.lose { color: var(--boom); } .status.info { color: var(--muted); }
   .statusact { font: 600 12.5px var(--font-ui); padding: 5px 12px; margin-top: -4px; }
@@ -195,7 +198,9 @@
   }
   .cell:hover:not(.open) { filter: brightness(1.07); }
   .cell:focus { outline: none; }  /* no orange focus ring on the clicked cell... */
-  .cell:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; position: relative; z-index: 3; }  /* ...but keyboard focus shows */
+  /* ...but keyboard focus shows. The script marks a cell that was focused by a pointer press .byptr; :focus-visible is not
+     used here because the engines disagree about it once mouse and keys are mixed (see "Focus ring" in the script) */
+  .cell:focus:not(.byptr) { outline: 2px solid var(--accent); outline-offset: -2px; position: relative; z-index: 3; }
   .cell.open { background: var(--open); box-shadow: inset 0 0 0 0.5px var(--open-line); cursor: default; }
   .cell.open.num { cursor: pointer; }
   .cell.flag::after { content: ""; width: 42%; height: 46%; background: var(--accent);
@@ -259,16 +264,17 @@
   .btn.danger { color: var(--boom); }
   .btn.solid { background: var(--ink); color: var(--ground); border-color: var(--ink); }
 
-  /* phones: menu becomes a faint top strip, board below */
+  /* phones: menu becomes a top strip, board below. No extra fading here: touch has no hover to wake the menu,
+     and the resting colors are already the faintest that still meet 4.5:1 */
   @media (max-width: 700px) {
     :root { --menu-w: 0px; }
-    .menu { position: static; width: auto; flex-direction: row; flex-wrap: wrap; opacity: 0.6; padding: 12px 16px; gap: 10px 16px; }
+    .menu { position: static; width: auto; flex-direction: row; flex-wrap: wrap; padding: 12px 16px; gap: 10px 16px; }
     .stage { position: static; height: auto; margin: 0; padding: 8px 16px 24px; }
   }
 </style>
 </head>
 <body>
-<nav class="menu" id="menu" aria-label="Menu">
+<nav class="menu" id="menu" aria-label="메뉴">
   <p class="brand">MINE<span>:</span>D</p>
 
   <div class="group">
@@ -301,9 +307,9 @@
   <div class="group">
     <span id="t-view">보기</span>
     <div class="zoom">
-      <button type="button" id="zoomOut" aria-label="Zoom out">−</button>
+      <button type="button" id="zoomOut" aria-label="축소">−</button>
       <output id="zoomVal">100%</output>
-      <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
+      <button type="button" id="zoomIn" aria-label="확대">+</button>
       <button type="button" class="fit" id="zoomFit">맞춤</button>
     </div>
     <div class="modes" id="modes">
@@ -333,10 +339,10 @@
   <div class="group">
     <span id="t-lang">언어</span>
     <div class="langs" id="langs">
-      <button type="button" data-lang="ko">한국어</button>
-      <button type="button" data-lang="en">English</button>
-      <button type="button" data-lang="ja">日本語</button>
-      <button type="button" data-lang="zh">中文</button>
+      <button type="button" data-lang="ko" lang="ko">한국어</button>
+      <button type="button" data-lang="en" lang="en">English</button>
+      <button type="button" data-lang="ja" lang="ja">日本語</button>
+      <button type="button" data-lang="zh" lang="zh">中文</button>
     </div>
   </div>
 
@@ -355,15 +361,15 @@
 <main class="stage" id="stage">
   <div class="play">
     <dl class="hud">
-      <dt id="t-diff">난이도:</dt><dd id="lvlLabel"></dd><span class="gap"></span><dt class="r" id="t-time">시간:</dt><dd class="r" id="time">00:00.0</dd>
-      <dt id="t-mode">모드:</dt><dd id="modeLabel"></dd><span class="gap"></span><dt class="r" id="t-minesLeft">남은 지뢰 수:</dt><dd class="r" id="minesLeft">0</dd>
-      <dt id="t-gameNo">게임 번호:</dt><dd id="gameNo"></dd><span class="gap"></span><dt class="r" id="t-cellsLeft">남은 칸 수:</dt><dd class="r" id="cellsLeft">0</dd>
+      <dt id="t-diff">난이도:</dt><dd id="lvlLabel"></dd><dt class="r" id="t-time">시간:</dt><dd class="r" id="time">00:00.0</dd>
+      <dt id="t-mode">모드:</dt><dd id="modeLabel"></dd><dt class="r" id="t-minesLeft">남은 지뢰 수:</dt><dd class="r" id="minesLeft">0</dd>
+      <dt id="t-gameNo">게임 번호:</dt><dd id="gameNo"></dd><dt class="r" id="t-cellsLeft">남은 칸 수:</dt><dd class="r" id="cellsLeft">0</dd>
     </dl>
     <div class="touchmode" id="touchMode" role="group">
       <button type="button" data-tm="open" aria-pressed="true"></button>
       <button type="button" data-tm="flag" aria-pressed="false"></button>
     </div>
-    <div class="holdset" id="holdSet" role="group"><span id="t-hold"></span>
+    <div class="holdset" id="holdSet" role="group" aria-labelledby="t-hold"><span id="t-hold"></span>
       <button type="button" data-hold="0"></button><button type="button" data-hold="200">0.2s</button>
       <button type="button" data-hold="300">0.3s</button><button type="button" data-hold="500">0.5s</button>
     </div>
@@ -478,6 +484,8 @@
       numHelp: "같은 판이 나오려면 난이도(사용자 지정은 가로·세로·지뢰 수)와 게임 모드가 같고, 첫 칸도 같은 위치를 눌러야 해요. 완전 랜덤 모드는 첫 칸 위치와 상관없어요.",
       tm: { open: "열기", flag: "깃발", label: "터치 동작" }, board: "지뢰판",
       cs: { closed: "닫힘", flag: "깃발", empty: "빈 칸", num: n => `숫자 ${n}`, mine: "지뢰", boom: "밟은 지뢰", wrong: "잘못된 깃발" }, cellName: (r, c, s) => `${r}행 ${c}열, ${s}`,
+      menu: "메뉴", zoomIn: "확대", zoomOut: "축소",
+      introTextTouch: "처음 오셨나요? 칸을 탭하면 열리고, 길게 누르면 깃발을 꽂아요. 열린 숫자를 탭하면 주변이 한 번에 열려요. 난이도와 모드는 메뉴에서 고를 수 있어요.",
     },
     en: {
       title: "Minesweeper", modeLight: "Light", modeDark: "Dark", game: "Game", new: "New game", restart: "Restart", level: "Difficulty", view: "View", fit: "Fit",
@@ -508,6 +516,8 @@
       numHelp: "To get the same board, use the same level (for Custom: width, height and mines), the same game mode, and click the same first cell. In Pure random mode the first cell doesn’t matter.",
       tm: { open: "Open", flag: "Flag", label: "Tap action" }, board: "Minefield",
       cs: { closed: "closed", flag: "flagged", empty: "empty", num: n => `${n}`, mine: "mine", boom: "exploded mine", wrong: "wrong flag" }, cellName: (r, c, s) => `Row ${r}, column ${c}: ${s}`,
+      menu: "Menu", zoomIn: "Zoom in", zoomOut: "Zoom out",
+      introTextTouch: "New here? Tap a cell to open it, and hold a cell to flag a mine. Tap an open number to open everything around it. Pick a level and mode from the menu.",
     },
     ja: {
       title: "マインスイーパー", modeLight: "ライト", modeDark: "ダーク", game: "ゲーム", new: "新しいゲーム", restart: "リスタート", level: "難易度", view: "表示", fit: "全体",
@@ -538,6 +548,8 @@
       numHelp: "同じ盤面にするには、難易度(カスタムは幅・高さ・地雷数)とゲームモードを同じにし、最初に同じ位置のマスを押します。完全ランダムモードでは最初のマスの位置は関係ありません。",
       tm: { open: "開く", flag: "旗", label: "タップの動作" }, board: "盤面",
       cs: { closed: "未開封", flag: "旗", empty: "空白", num: n => `数字 ${n}`, mine: "地雷", boom: "踏んだ地雷", wrong: "間違った旗" }, cellName: (r, c, s) => `${r}行${c}列、${s}`,
+      menu: "メニュー", zoomIn: "拡大", zoomOut: "縮小",
+      introTextTouch: "はじめてですか?マスをタップすると開き、長押しで旗を立てます。開いた数字をタップすると周りが一度に開きます。難易度とモードはメニューで選べます。",
     },
     zh: {
       title: "扫雷", modeLight: "浅色", modeDark: "深色", game: "游戏", new: "新游戏", restart: "重新开始", level: "难度", view: "视图", fit: "适应",
@@ -568,6 +580,8 @@
       numHelp: "要得到同一局,难度(自定义需宽、高、地雷数相同)和游戏模式要相同,第一次也要点击相同位置的格子。完全随机模式与第一次点击的位置无关。",
       tm: { open: "打开", flag: "插旗", label: "点按操作" }, board: "雷区",
       cs: { closed: "未打开", flag: "旗子", empty: "空白", num: n => `数字 ${n}`, mine: "地雷", boom: "踩到的地雷", wrong: "错误的旗子" }, cellName: (r, c, s) => `第${r}行第${c}列,${s}`,
+      menu: "菜单", zoomIn: "放大", zoomOut: "缩小",
+      introTextTouch: "第一次来吗?点按格子即可打开,长按可以插旗。点按已打开的数字可一次打开周围的格子。难度和模式可以在菜单中选择。",
     },
   };
 
@@ -857,13 +871,17 @@
   // (the generators above keep each step short). Returns a function that stops it.
   // The next slice goes in as a low-priority task where the browser has a task scheduler, so input and painting
   // go first; elsewhere a zero-delay message task (no 4 ms clamp on long chains, unlike setTimeout).
+  // Timers get a turn too: every TIMER_TURN ms the next slice is queued as a zero-delay timeout instead, which lines it up
+  // behind the timeouts already due. Firefox holds timeouts back behind every other task while a page is still loading
+  // (a slow web font is enough), and a long run of slices then froze the clock and the "still checking" message.
+  const TIMER_TURN = 32;
   const nextTask = globalThis.scheduler?.postTask ? f => { scheduler.postTask(f, { priority: "background" }); } : (() => {
     const ch = new MessageChannel(), queue = [];
     ch.port1.onmessage = () => queue.shift()();
     return f => { queue.push(f); ch.port2.postMessage(0); };
   })();
   function runSliced(it, ms, done, fail) {
-    let stopped = false;
+    let stopped = false, timersAt = performance.now();
     const slice = () => {
       if (stopped) return;
       const end = performance.now() + ms;
@@ -874,7 +892,8 @@
           if (performance.now() >= end) break;
         }
       } catch (e) { stopped = true; return fail(e); }
-      nextTask(slice);
+      const now = performance.now();
+      if (now - timersAt >= TIMER_TURN) { timersAt = now; setTimeout(slice, 0); } else nextTask(slice);
     };
     nextTask(slice);
     return () => { stopped = true; };
@@ -921,6 +940,9 @@
     $("time").textContent = clock(0);
     $("board").classList.remove("paused"); $("pauseBtn").setAttribute("aria-pressed", "false"); paintWinStats();
     const board = $("board");
+    // A keyboard player keeps their place when N or R swaps the cells out. A cell that only has focus from a click
+    // (.byptr) is left alone, so mouse players get no focus ring.
+    const at = document.activeElement, keep = at && board.contains(at) && !at.classList.contains("byptr") ? +at.dataset.i : -1;
     const frag = document.createDocumentFragment(), t = L();
     cells = new Array(n);
     for (let y = 0; y < cfg.h; y++) {
@@ -936,6 +958,7 @@
     }
     board.replaceChildren(frag);
     focusIdx = 0; if (cells[0]) cells[0].tabIndex = 0;
+    if (keep >= 0) focusCell(Math.min(keep, n - 1), true);
     paintHud();
   }
 
@@ -960,6 +983,7 @@
     buildBoard();
     computeCounts();
     if (firstClick != null && firstGuard > 0) {
+      if (cfg.key === "daily") { openDaily(); return; }   // as on its first start: the clock waits for the first move
       begin(); reveal(firstClick); clicks = 1;   // the reopened first cell counts as the first click
       setStatus("restartedFirst", null, "info");
       checkWin();
@@ -1152,8 +1176,23 @@
   // ---------- daily board: the same no-guess 30×16·99 board for everyone on a calendar date ----------
   const DAILY = { w: 30, h: 16, m: 99 }, DAILY_LOG = "minesweeper-daily";
   const today = () => { const d = new Date(), p = x => String(x).padStart(2, "0"); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
-  let dailyLog = read(DAILY_LOG, {});
-  if (!isObj(dailyLog)) dailyLog = {};
+  // Stored like the stats, so checked like them: only dated entries with a win count and a best time (or none) are kept.
+  function cleanDaily(raw) {
+    const out = {};
+    if (!isObj(raw)) return out;
+    for (const [k, e] of Object.entries(raw)) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(k) || !isObj(e)) continue;
+      out[k] = { wins: count(e.wins) ? e.wins : 0, best: typeof e.best === "number" && e.best >= 0 && Number.isFinite(e.best) ? e.best : null };
+    }
+    return out;
+  }
+  let dailyLog = cleanDaily(read(DAILY_LOG, {}));
+  // The daily board waits with its center open (on its first start and after a restart): the clock starts with the player's first move.
+  function openDaily() {
+    reveal(firstClick); clicks = 1;
+    const best = dailyLog[cfg.date]?.best;
+    setStatus(best != null ? "dailyBest" : "dailyReady", best != null ? fmt(best) : cfg.date, "info");
+  }
   function startDaily(date = today()) {
     if (editing) closeEditor(false);
     $("custom").hidden = true;
@@ -1166,7 +1205,7 @@
   }
   function logDaily(t) {
     const e = dailyLog[cfg.date] || (dailyLog[cfg.date] = { wins: 0, best: null });
-    e.wins = (e.wins | 0) + 1;
+    e.wins++;
     if (!hintUsed && (e.best == null || t < e.best)) e.best = t;
     const keep = Object.keys(dailyLog).sort().slice(-120);   // a few months is plenty
     dailyLog = Object.fromEntries(keep.map(k => [k, dailyLog[k]]));
@@ -1180,7 +1219,7 @@
       if (navigator.share && matchMedia("(any-pointer: coarse)").matches) { await navigator.share({ text }); return; }
       await navigator.clipboard.writeText(text);
       setStatus("dailyCopied", null, "win", { key: "dailyShare", run: shareDaily });
-    } catch { window.prompt("", text); }
+    } catch (e) { if (e?.name !== "AbortError") window.prompt("", text); }   // closing the share sheet is not a failure
   }
 
   // Hint: a move the numbers prove (a safe cell to open or a mine to flag). The player's own flags are not trusted.
@@ -1221,7 +1260,8 @@
     c.classList.remove("hint", "hint-mine"); void c.offsetWidth; c.classList.add(cls);
     setTimeout(() => c.classList.remove(cls), 2200);
     c.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
-    if ($("board").contains(document.activeElement)) focusCell(i, true);
+    const at = document.activeElement;
+    if ($("board").contains(at) && !at.classList.contains("byptr")) focusCell(i, true);   // keyboard players' focus follows the hint
   }
   function showHint(mv) {
     if (mv.type === "guess") { setStatus("noLogic", null, "info"); return; }
@@ -1425,16 +1465,11 @@
   function applyNoGuess(job, mm, opts = {}) {
     mines = mm; computeCounts(); savedMines = mines.slice();
     firstClick = job.first; firstGuard = guardFor(job.first).length;
-    if (opts.daily) {   // shown with the center open; the clock starts with the player's first move
-      firstGuard = neighbors(job.first).length + 1;
-      reveal(job.first); clicks = 1;
-      const best = dailyLog[cfg.date]?.best;
-      setStatus(best != null ? "dailyBest" : "dailyReady", best != null ? fmt(best) : cfg.date, "info");
-      return;
-    }
+    if (opts.daily) { firstGuard = neighbors(job.first).length + 1; openDaily(); return; }
     begin(); reveal(job.first);
     if (firstGuard === 1) setStatus("denseFirst", null, "info");
     checkWin();
+    if (document.hidden) pause();   // built while the tab was away: the clock waits, as it does when a running game is left
   }
 
   // ---------- game mode ----------
@@ -1516,6 +1551,7 @@
   }
   function openEditor(preset) {
     if (cfg.key === "edited") cfg = { key: "custom", w: cfg.w, h: cfg.h, m: cfg.m };
+    if (cfg.key === "daily") cfg = { key: "expert", ...LEVELS.expert };   // the editor leaves the daily board, as N does
     if (preset) cfg = { key: "custom", w: preset.w, h: preset.h, m: preset.m };
     buildBoard();                          // clears any running game (its time is banked)
     mines = counts = savedMines = null; firstClick = null; firstGuard = 0; gameNo = 0;
@@ -1523,7 +1559,7 @@
     editMines = preset ? preset.mines.slice() : new Uint8Array(cfg.w * cfg.h);
     editMines.forEach((v, i) => { if (v) { cells[i].classList.add("emine"); labelCell(i); } });
     setStatus(null); setEditMsg(null);
-    paintEditor();
+    paintEditor(); markLevel();
   }
   function closeEditor(rebuild = true) {
     setEditing(false); editMines = null;
@@ -1564,7 +1600,7 @@
     const t = L();
     for (const [id, k] of [["t-editHelp", "editHelp"], ["editClear", "editClear"], ["editPlay", "editPlay"], ["editExit", "editExit"], ["editLoad", "editLoad"]]) $(id).textContent = t[k];
     $("editCopy").textContent = SITE ? t.editCopyLink : t.editCopy;
-    $("codeIn").placeholder = t.editLoadPh;
+    $("codeIn").placeholder = t.editLoadPh; $("codeIn").setAttribute("aria-label", t.editLoadPh);   // a placeholder alone is not a name
     if (editing) paintEditor();
   }
 
@@ -1606,14 +1642,14 @@
   }
 
   function applyLang() {
-    const t = L();
+    const t = L(), touch = matchMedia("(pointer: coarse)").matches;   // a touch screen has no space bar or right-click to explain
     document.documentElement.lang = lang;
     if (!PAGE_LANG) document.title = t.title === "지뢰찾기" ? "지뢰찾기 온라인 | MINE:D" : `${t.title} Online | MINE:D`;
-    const map = { "t-game": t.game, "t-new": t.new, "t-restart": t.restart, "t-tools": t.tools, "introText": t.introText, "introOk": t.introOk, "t-byNumber": t.byNumber, "t-numGo": t.start, "t-editor": t.editor, "t-level": t.level, "t-gmode": t.gmode,
+    const map = { "t-game": t.game, "t-new": t.new, "t-restart": t.restart, "t-tools": t.tools, "introText": touch ? t.introTextTouch : t.introText, "introOk": t.introOk, "t-byNumber": t.byNumber, "t-numGo": t.start, "t-editor": t.editor, "t-level": t.level, "t-gmode": t.gmode,
       "t-view": t.view, "t-fb": t.fb, "fbSend": t.fbSend, "modeLight": t.modeLight, "modeDark": t.modeDark, "zoomFit": t.fit, "t-help": t.help, "t-hint": t.hint, "t-stats": t.stats, "t-lang": t.lang,
       "t-time": t.time + ":", "t-diff": t.diff + ":", "t-mode": t.mode + ":", "t-gameNo": t.gameNo + ":",
       "t-minesLeft": t.minesLeft + ":", "t-cellsLeft": t.cellsLeft + ":", "t-w": t.w, "t-h": t.h, "t-m": t.m, "t-start": t.start,
-      "t-controls": matchMedia("(pointer: coarse)").matches ? t.controlsTouch : t.controls, "t-statsTitle": t.statsTitle, "statsClose": t.close, "statsReset": t.reset,
+      "t-controls": touch ? t.controlsTouch : t.controls, "t-statsTitle": t.statsTitle, "statsClose": t.close, "statsReset": t.reset,
       "statsReset2": t.resetYes, "resetAsk": t.resetAsk };
     for (const [id, text] of Object.entries(map)) $(id).textContent = text;
     $("langs").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
@@ -1623,6 +1659,7 @@
     $("board").dataset.pause = t.pauseCover; $("t-hold").textContent = t.hold; $("holdSet").title = t.tipX.hold;
     $("holdSet").querySelector('[data-hold="0"]').textContent = t.holdOff; paintWinStats();
     $("board").setAttribute("aria-label", t.board); $("touchMode").setAttribute("aria-label", t.tm.label);
+    $("menu").setAttribute("aria-label", t.menu); $("zoomIn").setAttribute("aria-label", t.zoomIn); $("zoomOut").setAttribute("aria-label", t.zoomOut);
     $("touchMode").querySelectorAll("button").forEach(b => { b.textContent = t.tm[b.dataset.tm]; });
     renderLevels(); renderGameModes(); paintHud(); paintStatus(); paintEditorText(); renderAbout(); labelAll();
     $("fbText").placeholder = t.fbPh; if (fbNoteKey) setFbNote(fbNoteKey, fbNoteCls);
@@ -1650,11 +1687,11 @@
   // Modal: the page behind is hidden from assistive tech, Tab stays inside (trapTab), the scrim takes the pointer,
   // and focus returns where it was. The board area gets aria-hidden rather than inert: making 6,000 cells inert
   // costs a full style pass (~16 ms on 100×60) on open and again on close.
-  let statsReturn = null;
+  let statsReturn = null, statsReturnPtr = false;
   const BEHIND = ["menu", "about", "intro"];
   function openStats() {
     if (!$("statsDlg").hidden) return;
-    statsReturn = document.activeElement;
+    statsReturn = document.activeElement; statsReturnPtr = !!statsReturn?.classList?.contains("byptr");
     $("resetAsk").hidden = true; $("statsReset2").hidden = true; $("statsReset").hidden = false; renderStats();
     $("statsDlg").hidden = false; BEHIND.forEach(id => { $(id).inert = true; });
     $("statsClose").focus();
@@ -1667,6 +1704,7 @@
     const back = statsReturn?.isConnected ? statsReturn : (cells[focusIdx] || $("statsBtn"));
     statsReturn = null;
     back.focus({ preventScroll: true });
+    if (statsReturnPtr && back.classList.contains("cell")) back.classList.add("byptr");   // a clicked cell comes back without a ring
   }
   function trapTab(e) {
     const f = [...$("statsDlg").querySelectorAll("button")].filter(b => !b.hidden);
@@ -1679,6 +1717,19 @@
   const board = $("board");
   const live = () => !over && !gen && !editing && !paused;
   let swallowClick = false, chordPress = false, lastPointer = "mouse", hold = null;
+  // Focus ring: keyboard focus shows one, a clicked cell must not. :focus-visible alone gets this wrong once mouse and
+  // keys are mixed: Chromium and WebKit turn it on for the clicked cell at the next key press (so flagging the hovered
+  // cell with the space bar ringed the cell clicked last), and WebKit keeps it off for arrow-key moves after a click.
+  // So the page keeps track itself: a cell that takes focus right after a pointer press or release on the board is
+  // marked .byptr (no ring, and not treated as the keyboard player's place) until focus moves on.
+  let ptrAt = -1e9;
+  for (const type of ["pointerdown", "pointerup"]) board.addEventListener(type, e => {
+    ptrAt = performance.now();
+    const c = e.target.closest(".cell");
+    if (c && c === document.activeElement) c.classList.add("byptr");   // pressing the cell that already has focus
+  });
+  board.addEventListener("focusin", e => { e.target.classList.toggle("byptr", performance.now() - ptrAt < 600); });
+  board.addEventListener("focusout", e => { e.target.classList.remove("byptr"); });
   board.addEventListener("click", e => {
     if (paused) { resume(); return; }
     if (swallowClick || chordPress) { swallowClick = false; return; }   // a long-press flag or a two-button chord already acted
@@ -1764,6 +1815,7 @@
   }
   document.addEventListener("keydown", e => {
     swallowClick = false;   // a key's click (Enter on a cell) is never a leftover of a mouse chord
+    ptrAt = -1e9;           // and focus moved by a key is keyboard focus, however soon after a click
     if (!$("statsDlg").hidden) { if (e.key === "Escape") closeStats(); else if (e.key === "Tab") trapTab(e); return; }
     const tgt = e.target instanceof Element ? e.target : document.body;
     if (tgt.closest("input, form, textarea") || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -1780,9 +1832,9 @@
       if (editing) toggleEditMine(i); else open[i] ? chord(i) : toggleFlag(i);
       return;
     }
-    if (editing) return;
     // Match the physical key (e.code) so shortcuts work in Korean/Japanese/Chinese input mode too.
     const c = e.code;
+    if (editing && !/^(Equal|Minus|NumpadAdd|NumpadSubtract)$/.test(c)) return;   // the editor keeps only the zoom keys
     if (c === "KeyN" || c === "F2") newGame();
     else if (c === "KeyP") paused ? resume() : pause();
     else if (c === "KeyR") restart();
@@ -1852,9 +1904,12 @@
     const t = document.documentElement.dataset.theme;
     return t === "light" || t === "dark" ? t : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
   }
+  const BAR = { light: "#e3e0d9", dark: "#0f1215" };   // --ground of each mode, for the browser's own bars
   function paintModes() {
-    const m = currentMode();
+    const m = currentMode(), picked = document.documentElement.dataset.theme;
     $("modes").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === m)));
+    // the theme-color tags follow the device setting by themselves; a picked mode has to be written into them
+    if (BAR[picked]) document.querySelectorAll('meta[name="theme-color"]').forEach(el => { el.content = BAR[picked]; });
   }
   function setMode(m) { document.documentElement.dataset.theme = m; write("minesweeper-mode", m); paintModes(); }
   { const saved = read("minesweeper-mode", null); if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved; }

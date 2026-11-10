@@ -25,14 +25,14 @@ python3 -m venv .venv
 ## 실행
 
 ```sh
-.venv/bin/pytest tests --browser chromium                                     # 약 2분
-.venv/bin/pytest tests --browser chromium --browser firefox --browser webkit  # 세 엔진, 약 10분
+.venv/bin/pytest tests --browser chromium                                     # 약 3분
+.venv/bin/pytest tests --browser chromium --browser firefox --browser webkit  # 세 엔진, 약 12분
 .venv/bin/pytest tests -k noguess --browser webkit                            # 이름으로 골라 실행
 .venv/bin/pytest tests --browser chromium --headed                            # 브라우저 창을 띄워서 보기
 ```
 
 `index.html`을 고친 뒤에는 `python3 build_langs.py`를 먼저 실행하세요. 언어별 페이지가 원본과 다르면
-`test_language_pages_seo_and_play`가 실패합니다.
+`test_language_pages_seo_and_play`와 `test_generated_pages_are_up_to_date`가 실패합니다.
 
 ## 무엇을 확인하나
 
@@ -40,6 +40,7 @@ python3 -m venv .venv
 |---|---|
 | `test_game.py` | 첫 클릭 보호(7개 난이도 모든 칸, 실제 클릭, 지뢰가 많은 판), 추측 불필요 판 생성(풀이 재생 검증, 시간 초과, 페이지 쪽 제한 시간, Worker 오류·잘못된 응답 7종, Worker 없을 때 분할 생성, 취소·새 게임·난이도·모드 변경, 페이지 쪽 재검증 중 취소, 생성 중 R/H/N), 재시작 정책, 힌트(열린 0 옆 잘못된 깃발, 완전 탐색과 비교한 추론 정확성, 추측 필요 판정, 예산 초과 시 "추측 필요"라고 하지 않음, 분할 검사 결과 일치, 진행 표시와 이동 시 취소, 힌트만으로 추측 불필요 판 끝내기), 통계 귀속과 초기화, 편집 중 상태, 저장 데이터 검증과 재로드, 공유 코드 길이 검사, 접근성(격자 구조, 이름, 방향키, Enter/Space, 통계 창 포커스, ARIA 모델), 터치 열기/깃발 전환과 끌어서 스크롤, 언어별 페이지 SEO와 동작 |
 | `test_features.py` | 플레이어 의견을 반영한 기능: 일시정지(시간 멈춤, 판 가림, 입력 차단, 탭 이탈 시 자동, P·F2), 3BV 계산(독립 구현과 300판 비교)과 승리 시 효율 줄·최고 3BV/s, 오늘의 판(날짜별 같은 판, 세 엔진 동일 지문, 첫 동작부터 시간, 기록·공유, `?daily` 링크, 재시작), 양쪽 버튼·가운데 버튼 코딩, 길게 눌러 깃발(누르는 중 표시, 움직이면 취소, 설정 저장, 터치 contextmenu 무시, Chromium 실제 터치), 앱 정보 파일과 오프라인 실행(Chromium) |
+| `test_review.py` | 2026-11 점검에서 고친 것: 오늘의 판 저장값 검증(깨진 값이 있어도 판이 열리고 승리가 기록됨), 공유 창을 닫았을 때 오류 창이 뜨지 않음, 탭을 떠난 사이 만들어진 추측 불필요 판은 일시정지로 대기, 폰트 서버가 응답하지 않아도 게임이 시작되고 조각 작업 중에도 타이머가 돎, 키보드 사용자의 초점 유지(N·R, Tab으로 들어온 경우 포함)와 마우스 사용자에게는 초점 테두리 없음, 편집기(오늘의 판에서 열기, 확대·축소 키), 모든 컨트롤의 이름(4개 언어), 정보 패널 구조와 배치, 고른 색 모드와 브라우저 바 색, 휴대폰 메뉴 글자 대비 4.5:1, 터치 화면용 첫 방문 안내, 언어별 문구 누락 검사, 생성 파일(`en/` `ja/` `zh/` `sitemap.xml` `robots.txt`) 최신 여부, `set-domain.sh` 왕복 |
 | `test_compat.py` | 2026-10 수정 전 버전(커밋 `109b1da`)과 같은 게임 번호·첫 칸이면 같은 판이 나오는지(187개 조합, 추측 불필요 16개 포함), 공유 코드가 같은지, 공유 링크로 판이 열리는지. 기준값은 `fixtures/golden.json` |
 
 엔진별로 빠지는 것:
@@ -86,4 +87,9 @@ Worker를 쓸 수 없을 때 추측 불필요 판 생성, 페이지 쪽 재검�
 조각 사이의 화면 그리기와 입력 처리 시간은 여기에 포함되지 않습니다.
 
 다음 조각은 브라우저에 작업 스케줄러가 있으면 `scheduler.postTask`의 낮은 우선순위(background)로, 없으면
-`MessageChannel` 작업으로 예약합니다. `setTimeout(0)`은 연속 호출 시 4ms씩 쉬게 되어 쓰지 않습니다.
+`MessageChannel` 작업으로 예약합니다. `setTimeout(0)`은 연속 호출 시 4ms씩 쉬게 되어 평소에는 쓰지 않습니다.
+
+다만 32ms마다 한 번은 다음 조각을 `setTimeout(0)`으로 예약해 타이머에게 차례를 줍니다. Firefox는 페이지가 아직
+로딩 중일 때(느린 웹폰트만으로도) 타이머를 다른 모든 작업 뒤로 미루기 때문에, 조각이 길게 이어지면 시계와
+"확실한 칸을 찾는 중…" 안내가 작업이 끝날 때까지 멈췄습니다. `test_game_plays_and_timers_run_while_the_font_server_hangs`가
+폰트 서버가 응답하지 않는 상태에서 이를 확인합니다.

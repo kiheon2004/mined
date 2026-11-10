@@ -6,6 +6,7 @@ closure's state and functions with a direct eval. The files on disk are never ch
 """
 import functools
 import http.server
+import sys
 import threading
 from pathlib import Path
 
@@ -48,12 +49,19 @@ class _Handler(http.server.SimpleHTTPRequestHandler):
         return super().send_head()
 
 
+class _Httpd(http.server.ThreadingHTTPServer):
+    def handle_error(self, request, client_address):
+        if isinstance(sys.exc_info()[1], (BrokenPipeError, ConnectionResetError)):
+            return          # the browser left the page before a file was fully sent: nothing to report
+        super().handle_error(request, client_address)
+
+
 class Server:
     """http://127.0.0.1:<port>/ serving `root` (default: this repo) with the test hook injected."""
 
     def __init__(self, root: Path = ROOT):
         handler = type("H", (_Handler,), {"root": Path(root)})
-        self.httpd = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+        self.httpd = _Httpd(("127.0.0.1", 0), handler)
         self.url = f"http://127.0.0.1:{self.httpd.server_address[1]}"
         threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
 

@@ -189,16 +189,24 @@ def test_daily_from_url_and_leaving_it(game):
 
 
 def test_daily_restart_reopens_center_and_stats_row(game):
+    """A restarted daily board waits like a fresh one: center open, clock at zero until the first move,
+    and the restart alone is not counted as a game played."""
     r = game.run(r"""
       E("stats = {}"); E("startDaily('2026-10-11')"); await until(() => !E("gen"), 30000);
       const m = E("mines"); const mine = [...Array(480).keys()].find(i => m[i] && !E("open")[i]);
       E("cells")[mine].click();   // lose
-      $("restart").click();
-      const o = { started: E("started"), centerOpen: !!E("open")[8 * 30 + 15], key: E("cfg").key, status: status() };
+      $("restart").click(); await sleep(400);
+      const o = { started: E("started"), clock: $("time").textContent, centerOpen: !!E("open")[8 * 30 + 15], key: E("cfg").key, status: status(),
+                  clicks: E("clicks"), played: E("stats").daily.played };
       $("statsBtn").click(); o.rows = [...$("statsTable").querySelectorAll("tbody tr td:first-child")].map(x => x.textContent); $("statsClose").click();
+      const safe = [...Array(480).keys()].find(i => !m[i] && !E("open")[i]);
+      E("cells")[safe].click(); await sleep(250);
+      o.startedByMove = E("started"); o.playedAfterMove = E("stats").daily.played; o.running = E("playSeconds()") > 0.15;
       return o;
     """)
-    assert r["started"] and r["centerOpen"] and r["key"] == "daily", r
+    assert not r["started"] and r["clock"] == "00:00.0" and r["centerOpen"] and r["key"] == "daily" and r["clicks"] == 1, r
+    assert r["status"].startswith("2026-10-11") and r["played"] == 1, r
+    assert r["startedByMove"] and r["playedAfterMove"] == 2 and r["running"], r
     assert "오늘의 판" in r["rows"], r
 
 
