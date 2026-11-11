@@ -444,7 +444,7 @@ def test_hint_budget_cut_never_claims_a_guess(game):
     """With the search cut short by its budget, the hint says 'not sure', never 'a guess is needed' — on many positions."""
     o = game.run(FIFTY_FIFTY + r"""
       const out = { unsureTexts: new Set() };
-      for (const budget of [1, 2, 5, 20]) {
+      for (const budget of [1, 2, 5, 10]) {      // (the proven mines are set aside first, so this two-cell check finishes in 11 steps)
         E(`exactBudget = ${budget}`); $("hint").click(); await until(() => !E("hintStop"), 5000);
         out.unsureTexts.add(status());
       }

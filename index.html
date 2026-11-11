@@ -336,6 +336,7 @@
     <span id="t-gmode">게임 모드</span>
     <button class="mi" type="button" data-gmode="random"><span>완전 랜덤</span></button>
     <button class="mi" type="button" data-gmode="safe"><span>첫 시도 보장</span></button>
+    <button class="mi" type="button" data-gmode="fair"><span>추측 안전</span></button>
     <button class="mi" type="button" data-gmode="noguess"><span>추측 불필요</span></button>
   </div>
 
@@ -506,12 +507,12 @@
       lose: "지뢰를 밟았어요. R로 같은 판을 다시 하거나 N으로 새 게임을 시작하세요.",
       win: t => `클리어! ${t}`, winRecord: t => `클리어! ${t}, 새 최고 기록이에요.`, winHinted: t => `클리어! ${t} (힌트를 써서 기록에는 남지 않아요)`,
       firstSafe: "첫 칸은 어디를 눌러도 안전해요.", 
-      gmode: "게임 모드", gm: { random: "완전 랜덤", safe: "첫 시도 보장", noguess: "추측 불필요" }, generating: "추측 없이 풀리는 판을 만드는 중…", firstRandom: "완전 랜덤 모드라 첫 칸도 지뢰일 수 있어요.", hintSafe: "초록색으로 반짝인 칸은 숫자로 보아 확실히 안전해요.", hintMine: "빨갛게 반짝인 칸은 숫자로 보아 확실히 지뢰예요. 깃발을 꽂으세요.", hintWrongFlag: "반짝인 칸은 안전한데 깃발이 꽂혀 있어요. 깃발을 빼 보세요.", noLogic: "지금은 숫자로 확실히 알 수 있는 칸이 하나도 없어요. 추측이 꼭 필요한 상황이에요.", byNumber: "번호로 시작", numErr: "1~999999 사이의 숫자를 입력하세요.", editor: "판 편집기", editHelp: "칸을 클릭하거나 스페이스바를 눌러 지뢰를 놓고 뺍니다. 판 크기는 난이도 메뉴에서 고르세요.", editCount: n => `지뢰 <b>${n}</b>개`, editClear: "비우기", editPlay: "이 판으로 플레이", editCopy: "공유 코드 복사", editCopyLink: "공유 링크 복사", editCopied: "복사했어요. 친구에게 보내 보세요!", editCopyFail: "복사하지 못했어요. 아래 칸의 내용을 직접 복사하세요.", editExit: "편집 끝내기", editLoad: "불러오기", editLoadPh: "공유 코드나 링크 붙여 넣기", editBad: "코드를 읽을 수 없어요. 다시 확인해 주세요.", editLoaded: "판을 불러왔어요.", editNeed: "지뢰를 1개 이상 놓고, 빈칸도 1칸 이상 남겨 주세요.", editedBoard: "편집한 판", edited: "편집한 판", sharedBoard: "공유받은 판이에요. 첫 클릭 보장이 없으니 조심하세요!", tools: "도구", introText: "처음 오셨나요? 칸을 클릭하면 열리고, 스페이스바나 오른쪽 클릭으로 깃발을 꽂아요. 숫자 위에서 스페이스바를 누르면 주변이 한 번에 열려요. 난이도와 모드는 왼쪽 메뉴에서 고를 수 있어요.", introOk: "알겠어요", tip: { lv: { beginner: "처음이라면 여기서 시작하세요", intermediate: "익숙해졌다면 다음 단계", expert: "고전 지뢰찾기의 최고 난이도", nothuman: "여기서부터 고급보다 큰 판", superman: "더 넓은 판, 집중력이 필요해요", alien: "긴 승부를 각오하세요", god: "가장 큰 판", custom: "가로·세로·지뢰 수를 직접 정해요" }, gm: { random: "첫 클릭에서도 지뢰를 밟을 수 있는 고전 방식", safe: "첫 클릭한 칸과 주변 8칸에는 지뢰가 없어요. 지뢰가 아주 많은 사용자 지정 판에서는 클릭한 칸만 보호해요", noguess: "숫자만으로 항상 끝까지 풀 수 있는 판만 나와요. 찍을 필요가 없어요" }, fit: "판을 화면 크기에 맞춰요", byNumber: "같은 번호로 친구와 같은 판을 할 수 있어요 (난이도·모드·첫 칸 위치도 같아야 해요)", editor: "지뢰를 직접 놓아 판을 만들고 링크로 공유해요 (첫 클릭 보호는 없어요)", hint: "숫자로 확실히 알 수 있는 칸을 알려 줘요. 확실한 칸이 없으면 가장 안전한 칸과 지뢰일 확률을 알려 줘요 (기록에는 안 남아요)", stats: "난이도별 플레이 수·승률·최고 기록" }, restartNone: "아직 시작하지 않은 판이에요.", restarted: "같은 판을 처음부터 다시 해요. 이 판은 첫 칸 보호가 없으니 조심하세요.",
+      gmode: "게임 모드", gm: { random: "완전 랜덤", safe: "첫 시도 보장", noguess: "추측 불필요", fair: "추측 안전" }, generating: "추측 없이 풀리는 판을 만드는 중…", firstRandom: "완전 랜덤 모드라 첫 칸도 지뢰일 수 있어요.", hintSafe: "초록색으로 반짝인 칸은 숫자로 보아 확실히 안전해요.", hintMine: "빨갛게 반짝인 칸은 숫자로 보아 확실히 지뢰예요. 깃발을 꽂으세요.", hintWrongFlag: "반짝인 칸은 안전한데 깃발이 꽂혀 있어요. 깃발을 빼 보세요.", noLogic: "지금은 숫자로 확실히 알 수 있는 칸이 하나도 없어요. 추측이 꼭 필요한 상황이에요.", byNumber: "번호로 시작", numErr: "1~999999 사이의 숫자를 입력하세요.", editor: "판 편집기", editHelp: "칸을 클릭하거나 스페이스바를 눌러 지뢰를 놓고 뺍니다. 판 크기는 난이도 메뉴에서 고르세요.", editCount: n => `지뢰 <b>${n}</b>개`, editClear: "비우기", editPlay: "이 판으로 플레이", editCopy: "공유 코드 복사", editCopyLink: "공유 링크 복사", editCopied: "복사했어요. 친구에게 보내 보세요!", editCopyFail: "복사하지 못했어요. 아래 칸의 내용을 직접 복사하세요.", editExit: "편집 끝내기", editLoad: "불러오기", editLoadPh: "공유 코드나 링크 붙여 넣기", editBad: "코드를 읽을 수 없어요. 다시 확인해 주세요.", editLoaded: "판을 불러왔어요.", editNeed: "지뢰를 1개 이상 놓고, 빈칸도 1칸 이상 남겨 주세요.", editedBoard: "편집한 판", edited: "편집한 판", sharedBoard: "공유받은 판이에요. 첫 클릭 보장이 없으니 조심하세요!", tools: "도구", introText: "처음 오셨나요? 칸을 클릭하면 열리고, 스페이스바나 오른쪽 클릭으로 깃발을 꽂아요. 숫자 위에서 스페이스바를 누르면 주변이 한 번에 열려요. 난이도와 모드는 왼쪽 메뉴에서 고를 수 있어요.", introOk: "알겠어요", tip: { lv: { beginner: "처음이라면 여기서 시작하세요", intermediate: "익숙해졌다면 다음 단계", expert: "고전 지뢰찾기의 최고 난이도", nothuman: "여기서부터 고급보다 큰 판", superman: "더 넓은 판, 집중력이 필요해요", alien: "긴 승부를 각오하세요", god: "가장 큰 판", custom: "가로·세로·지뢰 수를 직접 정해요" }, gm: { random: "첫 클릭에서도 지뢰를 밟을 수 있는 고전 방식", safe: "첫 클릭한 칸과 주변 8칸에는 지뢰가 없어요. 지뢰가 아주 많은 사용자 지정 판에서는 클릭한 칸만 보호해요", noguess: "숫자만으로 항상 끝까지 풀 수 있는 판만 나와요. 찍을 필요가 없어요", fair: "숫자로 확실히 안전한 칸이 하나도 없어서 찍어야 할 때는, 연 칸이 지뢰가 되지 않아요. 안전한 칸을 알아낼 수 있는데 찍으면 보호되지 않아요" }, fit: "판을 화면 크기에 맞춰요", byNumber: "같은 번호로 친구와 같은 판을 할 수 있어요 (난이도·모드·첫 칸 위치도 같아야 해요)", editor: "지뢰를 직접 놓아 판을 만들고 링크로 공유해요 (첫 클릭 보호는 없어요)", hint: "숫자로 확실히 알 수 있는 칸을 알려 줘요. 확실한 칸이 없으면 가장 안전한 칸과 지뢰일 확률을 알려 줘요 (기록에는 안 남아요)", stats: "난이도별 플레이 수·승률·최고 기록" }, restartNone: "아직 시작하지 않은 판이에요.", restarted: "같은 판을 처음부터 다시 해요. 이 판은 첫 칸 보호가 없으니 조심하세요.",
       errW: "가로는 5~100 사이로 입력하세요.", errH: "세로는 5~60 사이로 입력하세요.", errM: n => `지뢰는 1~${n}개 사이로 입력하세요.`,
       statsTitle: "통계", cols: ["난이도", "플레이", "승리", "승률", "연승 (최고)", "최고 기록", "최고 3BV/s", "총 플레이 시간"], close: "닫기", reset: "초기화",
       fb: "피드백", fbPh: "개선할 점이나 버그를 적어 주세요", fbSend: "보내기", fbSending: "보내는 중…", fbSent: "보냈어요. 고마워요!", fbEmpty: "내용을 입력해 주세요.", fbFail: "보내지 못했어요. 잠시 후 다시 시도해 주세요.", 
       resetAsk: "모든 통계를 지울까요? 지금 하는 게임도 기록되지 않아요.", resetYes: "지우기", sec: s => `${s}초`,
-      restartedFirst: "같은 판을 다시 시작해요. 첫 칸의 안전을 지키려고 처음 연 칸을 다시 열어 두었어요.", restartTip: "같은 지뢰 배치로 다시 해요. 첫 시도 보장·추측 불필요 모드에서는 처음 연 칸이 열린 채로 시작해요",
+      restartedFirst: "같은 판을 다시 시작해요. 첫 칸의 안전을 지키려고 처음 연 칸을 다시 열어 두었어요.", restartTip: "같은 지뢰 배치로 다시 해요. 완전 랜덤이 아닌 모드에서는 처음 연 칸이 열린 채로 시작해요",
       controlsTouch: "탭: 열기 · 길게 누르기(또는 깃발 모드): 깃발 · 열린 숫자 탭: 주변 열기",
       pause: "일시정지", pausedMsg: "일시정지했어요. 판을 누르거나 P를 누르면 이어서 해요.", pauseCover: "일시정지 · 누르면 계속",
       daily: "오늘의 판", dailyReady: d => `${d} 오늘의 판이에요. 모두가 같은 판을 해요. 가운데가 열린 채로 시작하고, 첫 동작부터 시간이 흘러요.`, dailyBest: x => `오늘 최고 기록 ${x}. 다시 도전해 보세요.`,
@@ -529,6 +530,9 @@
       cs: { closed: "닫힘", flag: "깃발", empty: "빈 칸", num: n => `숫자 ${n}`, mine: "지뢰", boom: "밟은 지뢰", wrong: "잘못된 깃발" }, cellName: (r, c, s) => `${r}행 ${c}열, ${s}`,
       menu: "메뉴", zoomIn: "확대", zoomOut: "축소",
       hintGuess: p => `숫자만으로 확실한 칸이 없어서 추측이 필요해요. 주황색으로 반짝인 칸이 가장 안전해요 (지뢰일 확률 ${p}%).`,
+      fairMoved: "추측할 수밖에 없는 자리였어요. 지뢰를 다른 곳으로 옮겨서 연 칸은 안전해요.", loseFairSafe: "지뢰를 밟았어요. 숫자로 확실히 안전한 칸이 따로 있어서 이번 추측은 보호되지 않았어요.", loseFairMine: "지뢰를 밟았어요. 숫자로 보아 여기에는 지뢰가 꼭 있어야 해서 보호할 수 없었어요.",
+      fairOn: "추측 안전 모드예요. 확실히 안전한 칸이 하나도 없어서 찍어야 할 때는, 연 칸이 지뢰가 되지 않아요.",
+      hintFair: "지금은 숫자로 확실히 알 수 있는 칸이 하나도 없어요. 추측 안전 모드라 어느 칸을 열어도 지뢰가 아니에요.",
       undoLose: "무르고 계속하기", undone: "밟은 지뢰에 깃발을 꽂고 이어서 해요. 이 판은 승리나 기록으로 남지 않아요.",
       winUndone: t => `클리어! ${t} (한 번 무른 판이라 승리로 기록되지 않아요)`, streakLine: n => `${n}연승`,
       introTextTouch: "처음 오셨나요? 칸을 탭하면 열리고, 길게 누르면 깃발을 꽂아요. 열린 숫자를 탭하면 주변이 한 번에 열려요. 난이도와 모드는 메뉴에서 고를 수 있어요.",
@@ -543,12 +547,12 @@
       lose: "You hit a mine. Press R to replay this board or N for a new game.",
       win: t => `Cleared in ${t}!`, winRecord: t => `Cleared in ${t}! New best time.`, winHinted: t => `Cleared in ${t}! (Hints used, so it isn't recorded.)`,
       firstSafe: "Your first click is always safe.", 
-      gmode: "Game mode", gm: { random: "Pure random", safe: "Safe first click", noguess: "No guessing" }, generating: "Building a board you can solve without guessing…", firstRandom: "Pure random mode: even your first click can hit a mine.", hintSafe: "The cell flashing green is certainly safe from the numbers.", hintMine: "The cell flashing red is certainly a mine from the numbers. Flag it.", hintWrongFlag: "The flashing cell is safe, but it has a flag on it. Try removing the flag.", noLogic: "No cell is certain from the numbers right now, so this spot needs a guess.", byNumber: "Start by number", numErr: "Enter a number from 1 to 999999.", editor: "Board editor", editHelp: "Click a cell or press space to add or remove a mine. Pick the board size from the difficulty menu.", editCount: n => `<b>${n}</b> mines`, editClear: "Clear", editPlay: "Play this board", editCopy: "Copy share code", editCopyLink: "Copy share link", editCopied: "Copied. Send it to a friend!", editCopyFail: "Couldn’t copy. Copy the text in the box below instead.", editExit: "Close editor", editLoad: "Load", editLoadPh: "Paste a share code or link", editBad: "That code can’t be read. Check it and try again.", editLoaded: "Board loaded.", editNeed: "Place at least one mine and leave at least one empty cell.", editedBoard: "Custom-built board", edited: "Built board", sharedBoard: "This is a shared board. There’s no safe first click, so be careful!", tools: "Tools", introText: "New here? Click a cell to open it, and press space or right-click to flag a mine. Press space on a number to open everything around it. Pick a level and mode from the menu on the left.", introOk: "Got it", tip: { lv: { beginner: "Start here if you’re new", intermediate: "The next step once you’re comfortable", expert: "The hardest classic level", nothuman: "Bigger than Expert from here on", superman: "A wider board that needs focus", alien: "Settle in for a long game", god: "The biggest board", custom: "Set your own width, height and mines" }, gm: { random: "Classic: even your first click can hit a mine", safe: "No mines in your first cell or the 8 around it (only the cell itself on very crowded custom boards)", noguess: "Every board can be solved from the numbers alone. No guessing needed" }, fit: "Fit the board to the window", byNumber: "Play the same board as a friend by using the same number (same level, mode and first cell)", editor: "Place mines yourself and share the board by link (no safe first click)", hint: "Shows a cell the numbers prove, or when nothing is certain the safest cell and its odds (that game won’t count as a record)", stats: "Games, win rate and best times by level" }, restartNone: "This board hasn't started yet.", restarted: "Replaying the same board from the start. This board has no safe first click, so be careful.",
+      gmode: "Game mode", gm: { random: "Pure random", safe: "Safe first click", noguess: "No guessing", fair: "Safe guessing" }, generating: "Building a board you can solve without guessing…", firstRandom: "Pure random mode: even your first click can hit a mine.", hintSafe: "The cell flashing green is certainly safe from the numbers.", hintMine: "The cell flashing red is certainly a mine from the numbers. Flag it.", hintWrongFlag: "The flashing cell is safe, but it has a flag on it. Try removing the flag.", noLogic: "No cell is certain from the numbers right now, so this spot needs a guess.", byNumber: "Start by number", numErr: "Enter a number from 1 to 999999.", editor: "Board editor", editHelp: "Click a cell or press space to add or remove a mine. Pick the board size from the difficulty menu.", editCount: n => `<b>${n}</b> mines`, editClear: "Clear", editPlay: "Play this board", editCopy: "Copy share code", editCopyLink: "Copy share link", editCopied: "Copied. Send it to a friend!", editCopyFail: "Couldn’t copy. Copy the text in the box below instead.", editExit: "Close editor", editLoad: "Load", editLoadPh: "Paste a share code or link", editBad: "That code can’t be read. Check it and try again.", editLoaded: "Board loaded.", editNeed: "Place at least one mine and leave at least one empty cell.", editedBoard: "Custom-built board", edited: "Built board", sharedBoard: "This is a shared board. There’s no safe first click, so be careful!", tools: "Tools", introText: "New here? Click a cell to open it, and press space or right-click to flag a mine. Press space on a number to open everything around it. Pick a level and mode from the menu on the left.", introOk: "Got it", tip: { lv: { beginner: "Start here if you’re new", intermediate: "The next step once you’re comfortable", expert: "The hardest classic level", nothuman: "Bigger than Expert from here on", superman: "A wider board that needs focus", alien: "Settle in for a long game", god: "The biggest board", custom: "Set your own width, height and mines" }, gm: { random: "Classic: even your first click can hit a mine", safe: "No mines in your first cell or the 8 around it (only the cell itself on very crowded custom boards)", noguess: "Every board can be solved from the numbers alone. No guessing needed", fair: "When no cell can be proven safe and you have to guess, the cell you open is never a mine. A guess made while a safe cell can still be worked out is not protected" }, fit: "Fit the board to the window", byNumber: "Play the same board as a friend by using the same number (same level, mode and first cell)", editor: "Place mines yourself and share the board by link (no safe first click)", hint: "Shows a cell the numbers prove, or when nothing is certain the safest cell and its odds (that game won’t count as a record)", stats: "Games, win rate and best times by level" }, restartNone: "This board hasn't started yet.", restarted: "Replaying the same board from the start. This board has no safe first click, so be careful.",
       errW: "Width must be 5–100.", errH: "Height must be 5–60.", errM: n => `Mines must be 1–${n}.`,
       statsTitle: "Statistics", cols: ["Difficulty", "Played", "Won", "Win rate", "Streak (best)", "Best time", "Best 3BV/s", "Total play time"], close: "Close", reset: "Reset",
       fb: "Feedback", fbPh: "Ideas or bugs you noticed", fbSend: "Send", fbSending: "Sending…", fbSent: "Sent. Thank you!", fbEmpty: "Type something first.", fbFail: "Couldn’t send. Try again in a moment.", 
       resetAsk: "Clear all statistics? The game in progress won’t be recorded either.", resetYes: "Clear", sec: s => `${s}s`,
-      restartedFirst: "Replaying the same board. Your first cell is open again, so the start stays safe.", restartTip: "Play the same mine layout again. In Safe first click and No guessing modes, your first cell starts open",
+      restartedFirst: "Replaying the same board. Your first cell is open again, so the start stays safe.", restartTip: "Play the same mine layout again. In every mode except Pure random, your first cell starts open",
       controlsTouch: "Tap: open · Hold (or flag mode): flag · Tap a number: open around it",
       pause: "Pause", pausedMsg: "Paused. Click the board or press P to continue.", pauseCover: "Paused · click to continue",
       daily: "Daily board", dailyReady: d => `Daily board for ${d}: everyone plays the same board. It starts with the center open, and the clock runs from your first move.`, dailyBest: x => `Today’s best: ${x}. Try to beat it.`,
@@ -566,6 +570,9 @@
       cs: { closed: "closed", flag: "flagged", empty: "empty", num: n => `${n}`, mine: "mine", boom: "exploded mine", wrong: "wrong flag" }, cellName: (r, c, s) => `Row ${r}, column ${c}: ${s}`,
       menu: "Menu", zoomIn: "Zoom in", zoomOut: "Zoom out",
       hintGuess: p => `Nothing is certain from the numbers, so this takes a guess. The cell flashing orange is the safest (${p}% chance of a mine).`,
+      fairMoved: "That was a forced guess, so the mine was moved elsewhere and the cell you opened is safe.", loseFairSafe: "You hit a mine. A safe cell could still be worked out from the numbers, so this guess was not protected.", loseFairMine: "You hit a mine. The numbers say there has to be a mine here, so this move could not be protected.",
+      fairOn: "Safe guessing mode: when no cell can be proven safe and you have to guess, the cell you open is never a mine.",
+      hintFair: "No cell is certain from the numbers right now. In Safe guessing mode, whichever cell you open now will not be a mine.",
       undoLose: "Take it back and play on", undone: "The mine you hit is flagged and the game goes on. This game won’t count as a win or a record.",
       winUndone: t => `Cleared in ${t}! (You took back a mine, so it isn’t counted as a win.)`, streakLine: n => `${n} wins in a row`,
       introTextTouch: "New here? Tap a cell to open it, and hold a cell to flag a mine. Tap an open number to open everything around it. Pick a level and mode from the menu.",
@@ -580,12 +587,12 @@
       lose: "地雷を踏みました。Rで同じ盤面をもう一度、Nで新しいゲームを始めます。",
       win: t => `クリア! ${t}`, winRecord: t => `クリア! ${t}、自己ベスト更新です。`, winHinted: t => `クリア! ${t}(ヒント使用のため記録されません)`,
       firstSafe: "最初のクリックはどこでも安全です。", 
-      gmode: "ゲームモード", gm: { random: "完全ランダム", safe: "初手保証", noguess: "推測不要" }, generating: "推測なしで解ける盤面を作成中…", firstRandom: "完全ランダムモードでは最初のマスも地雷の可能性があります。", hintSafe: "緑に光ったマスは数字から確実に安全です。", hintMine: "赤く光ったマスは数字から確実に地雷です。旗を立てましょう。", hintWrongFlag: "光ったマスは安全ですが旗が立っています。旗を外してみてください。", noLogic: "今は数字から確定できるマスがひとつもありません。推測が必要な局面です。", byNumber: "番号で開始", numErr: "1〜999999 の数字を入力してください。", editor: "盤面エディタ", editHelp: "マスをクリックするかスペースキーで地雷を置いたり外したりします。盤面の大きさは難易度メニューで選びます。", editCount: n => `地雷 <b>${n}</b> 個`, editClear: "クリア", editPlay: "この盤面で遊ぶ", editCopy: "共有コードをコピー", editCopyLink: "共有リンクをコピー", editCopied: "コピーしました。友だちに送ってみましょう!", editCopyFail: "コピーできませんでした。下の欄の内容を直接コピーしてください。", editExit: "編集を終了", editLoad: "読み込む", editLoadPh: "共有コードかリンクを貼り付け", editBad: "コードを読み取れません。もう一度確認してください。", editLoaded: "盤面を読み込みました。", editNeed: "地雷を 1 個以上置き、空きマスも 1 つ以上残してください。", editedBoard: "作成した盤面", edited: "作成した盤面", sharedBoard: "共有された盤面です。初手保証がないので気をつけて!", tools: "ツール", introText: "はじめてですか?マスをクリックすると開き、スペースキーか右クリックで旗を立てます。数字の上でスペースキーを押すと周りが一度に開きます。難易度とモードは左のメニューで選べます。", introOk: "わかった", tip: { lv: { beginner: "初めてならここから", intermediate: "慣れてきたら次の段階", expert: "クラシックの最高難度", nothuman: "ここから上級より大きな盤面", superman: "広い盤面、集中力が必要", alien: "長期戦を覚悟して", god: "最大の盤面", custom: "幅・高さ・地雷数を自分で決めます" }, gm: { random: "最初のクリックでも地雷を踏むことがある従来の方式", safe: "最初にクリックしたマスと周りの8マスには地雷がありません(地雷がとても多いカスタム盤面ではクリックしたマスだけ)", noguess: "数字だけで必ず最後まで解ける盤面だけが出ます。推測は不要です" }, fit: "盤面を画面に合わせます", byNumber: "同じ番号で友だちと同じ盤面を遊べます(難易度・モード・最初のマスも同じにします)", editor: "地雷を自分で置いて盤面を作り、リンクで共有します(初手保証はありません)", hint: "数字から確実にわかるマスを教えます。確定できない時は、いちばん安全なマスと地雷の確率を教えます(記録には残りません)", stats: "難易度ごとのプレイ数・勝率・ベスト" }, restartNone: "まだ始まっていない盤面です。", restarted: "同じ盤面を最初からやり直します。この盤面は初手保証がないので気をつけて。",
+      gmode: "ゲームモード", gm: { random: "完全ランダム", safe: "初手保証", noguess: "推測不要", fair: "推測保護" }, generating: "推測なしで解ける盤面を作成中…", firstRandom: "完全ランダムモードでは最初のマスも地雷の可能性があります。", hintSafe: "緑に光ったマスは数字から確実に安全です。", hintMine: "赤く光ったマスは数字から確実に地雷です。旗を立てましょう。", hintWrongFlag: "光ったマスは安全ですが旗が立っています。旗を外してみてください。", noLogic: "今は数字から確定できるマスがひとつもありません。推測が必要な局面です。", byNumber: "番号で開始", numErr: "1〜999999 の数字を入力してください。", editor: "盤面エディタ", editHelp: "マスをクリックするかスペースキーで地雷を置いたり外したりします。盤面の大きさは難易度メニューで選びます。", editCount: n => `地雷 <b>${n}</b> 個`, editClear: "クリア", editPlay: "この盤面で遊ぶ", editCopy: "共有コードをコピー", editCopyLink: "共有リンクをコピー", editCopied: "コピーしました。友だちに送ってみましょう!", editCopyFail: "コピーできませんでした。下の欄の内容を直接コピーしてください。", editExit: "編集を終了", editLoad: "読み込む", editLoadPh: "共有コードかリンクを貼り付け", editBad: "コードを読み取れません。もう一度確認してください。", editLoaded: "盤面を読み込みました。", editNeed: "地雷を 1 個以上置き、空きマスも 1 つ以上残してください。", editedBoard: "作成した盤面", edited: "作成した盤面", sharedBoard: "共有された盤面です。初手保証がないので気をつけて!", tools: "ツール", introText: "はじめてですか?マスをクリックすると開き、スペースキーか右クリックで旗を立てます。数字の上でスペースキーを押すと周りが一度に開きます。難易度とモードは左のメニューで選べます。", introOk: "わかった", tip: { lv: { beginner: "初めてならここから", intermediate: "慣れてきたら次の段階", expert: "クラシックの最高難度", nothuman: "ここから上級より大きな盤面", superman: "広い盤面、集中力が必要", alien: "長期戦を覚悟して", god: "最大の盤面", custom: "幅・高さ・地雷数を自分で決めます" }, gm: { random: "最初のクリックでも地雷を踏むことがある従来の方式", safe: "最初にクリックしたマスと周りの8マスには地雷がありません(地雷がとても多いカスタム盤面ではクリックしたマスだけ)", noguess: "数字だけで必ず最後まで解ける盤面だけが出ます。推測は不要です", fair: "確実に安全なマスがひとつもなく推測するしかないとき、開けたマスは地雷になりません。安全なマスを割り出せるのに推測した場合は守られません" }, fit: "盤面を画面に合わせます", byNumber: "同じ番号で友だちと同じ盤面を遊べます(難易度・モード・最初のマスも同じにします)", editor: "地雷を自分で置いて盤面を作り、リンクで共有します(初手保証はありません)", hint: "数字から確実にわかるマスを教えます。確定できない時は、いちばん安全なマスと地雷の確率を教えます(記録には残りません)", stats: "難易度ごとのプレイ数・勝率・ベスト" }, restartNone: "まだ始まっていない盤面です。", restarted: "同じ盤面を最初からやり直します。この盤面は初手保証がないので気をつけて。",
       errW: "幅は5〜100で入力してください。", errH: "高さは5〜60で入力してください。", errM: n => `地雷は1〜${n}個で入力してください。`,
       statsTitle: "統計", cols: ["難易度", "プレイ", "勝利", "勝率", "連勝 (最高)", "ベスト", "ベスト 3BV/s", "総プレイ時間"], close: "閉じる", reset: "リセット",
       fb: "フィードバック", fbPh: "改善点やバグを書いてください", fbSend: "送信", fbSending: "送信中…", fbSent: "送信しました。ありがとうございます!", fbEmpty: "内容を入力してください。", fbFail: "送信できませんでした。少し後でもう一度お試しください。", 
       resetAsk: "すべての統計を消去しますか?プレイ中のゲームも記録されません。", resetYes: "消去", sec: s => `${s}秒`,
-      restartedFirst: "同じ盤面をやり直します。最初のマスを安全にするため、最初に開いたマスを開けておきました。", restartTip: "同じ地雷配置でもう一度遊びます。初手保証・推測不要モードでは最初に開いたマスが開いた状態で始まります",
+      restartedFirst: "同じ盤面をやり直します。最初のマスを安全にするため、最初に開いたマスを開けておきました。", restartTip: "同じ地雷配置でもう一度遊びます。完全ランダム以外のモードでは最初に開いたマスが開いた状態で始まります",
       controlsTouch: "タップ: 開く · 長押し(または旗モード): 旗 · 数字をタップ: 周囲を開く",
       pause: "一時停止", pausedMsg: "一時停止中です。盤面をクリックするか P で再開します。", pauseCover: "一時停止中 · クリックで再開",
       daily: "今日の盤面", dailyReady: d => `${d} の今日の盤面です。全員が同じ盤面を遊びます。中央が開いた状態で始まり、最初の操作から時間が進みます。`, dailyBest: x => `今日のベスト ${x}。もう一度挑戦しましょう。`,
@@ -603,6 +610,9 @@
       cs: { closed: "未開封", flag: "旗", empty: "空白", num: n => `数字 ${n}`, mine: "地雷", boom: "踏んだ地雷", wrong: "間違った旗" }, cellName: (r, c, s) => `${r}行${c}列、${s}`,
       menu: "メニュー", zoomIn: "拡大", zoomOut: "縮小",
       hintGuess: p => `数字だけでは確定できるマスがなく、推測が必要です。オレンジに光ったマスがいちばん安全です(地雷の確率 ${p}%)。`,
+      fairMoved: "推測するしかない局面だったので、地雷を別の場所に移しました。開けたマスは安全です。", loseFairSafe: "地雷を踏みました。数字から確実に安全なマスが他にあったため、この推測は保護されませんでした。", loseFairMine: "地雷を踏みました。数字から見てここには必ず地雷があるため、保護できませんでした。",
+      fairOn: "推測保護モードです。確実に安全なマスがひとつもなく推測するしかないとき、開けたマスは地雷になりません。",
+      hintFair: "今は数字から確定できるマスがひとつもありません。推測保護モードなので、どのマスを開けても地雷ではありません。",
       undoLose: "一手戻して続ける", undone: "踏んだ地雷に旗を立てて続けます。このゲームは勝利や記録には残りません。",
       winUndone: t => `クリア! ${t}(一手戻したため勝利には数えません)`, streakLine: n => `${n}連勝`,
       introTextTouch: "はじめてですか?マスをタップすると開き、長押しで旗を立てます。開いた数字をタップすると周りが一度に開きます。難易度とモードはメニューで選べます。",
@@ -617,12 +627,12 @@
       lose: "踩到地雷了。按 R 重玩同一局,按 N 开始新游戏。",
       win: t => `通关! ${t}`, winRecord: t => `通关! ${t},新纪录!`, winHinted: t => `通关! ${t}(使用了提示,不计入纪录)`,
       firstSafe: "第一次点击总是安全的。", 
-      gmode: "游戏模式", gm: { random: "完全随机", safe: "首次点击安全", noguess: "无需猜测" }, generating: "正在生成无需猜测的棋盘…", firstRandom: "完全随机模式下,第一次点击也可能踩到地雷。", hintSafe: "闪绿光的格子根据数字可以确定是安全的。", hintMine: "闪红光的格子根据数字可以确定是地雷,请插旗。", hintWrongFlag: "闪光的格子是安全的,但上面插了旗,试着拔掉旗子。", noLogic: "现在仅凭数字无法确定任何格子,必须猜测。", byNumber: "按编号开始", numErr: "请输入 1 到 999999 之间的数字。", editor: "棋盘编辑器", editHelp: "点击格子或按空格键放置或移除地雷。棋盘大小请在难度菜单中选择。", editCount: n => `地雷 <b>${n}</b> 颗`, editClear: "清空", editPlay: "玩这个棋盘", editCopy: "复制分享码", editCopyLink: "复制分享链接", editCopied: "已复制,发给朋友吧!", editCopyFail: "复制失败,请直接复制下方框中的内容。", editExit: "退出编辑", editLoad: "载入", editLoadPh: "粘贴分享码或链接", editBad: "无法读取这个代码,请检查后重试。", editLoaded: "已载入棋盘。", editNeed: "请至少放置 1 颗地雷,并至少留出 1 个空格。", editedBoard: "自制棋盘", edited: "自制棋盘", sharedBoard: "这是分享来的棋盘,没有首次点击保护,请小心!", tools: "工具", introText: "第一次来吗?点击格子即可打开,按空格键或右键插旗。在数字上按空格键可一次打开周围的格子。难度和模式可以在左侧菜单中选择。", introOk: "知道了", tip: { lv: { beginner: "新手从这里开始", intermediate: "熟悉之后的下一步", expert: "经典扫雷的最高难度", nothuman: "从这里开始比高级更大", superman: "更大的棋盘,需要专注", alien: "准备好打持久战", god: "最大的棋盘", custom: "自己设定宽、高和地雷数" }, gm: { random: "经典方式:第一次点击也可能踩到地雷", safe: "第一次点击的格子及周围 8 格没有地雷(地雷很多的自定义棋盘只保护点击的格子)", noguess: "只出现仅凭数字就能解完的棋盘,无需猜测" }, fit: "让棋盘适应窗口大小", byNumber: "用相同编号和朋友玩同一局(难度、模式和第一次点击的位置也要相同)", editor: "自己放置地雷制作棋盘,并用链接分享(没有首次点击保护)", hint: "提示一个能由数字确定的格子;无法确定时,提示最安全的格子及其是地雷的概率(该局不计入纪录)", stats: "各难度的局数、胜率和最佳纪录" }, restartNone: "这一局还没有开始。", restarted: "从头重玩同一局。这个棋盘没有首次点击保护,请小心。",
+      gmode: "游戏模式", gm: { random: "完全随机", safe: "首次点击安全", noguess: "无需猜测", fair: "猜测保护" }, generating: "正在生成无需猜测的棋盘…", firstRandom: "完全随机模式下,第一次点击也可能踩到地雷。", hintSafe: "闪绿光的格子根据数字可以确定是安全的。", hintMine: "闪红光的格子根据数字可以确定是地雷,请插旗。", hintWrongFlag: "闪光的格子是安全的,但上面插了旗,试着拔掉旗子。", noLogic: "现在仅凭数字无法确定任何格子,必须猜测。", byNumber: "按编号开始", numErr: "请输入 1 到 999999 之间的数字。", editor: "棋盘编辑器", editHelp: "点击格子或按空格键放置或移除地雷。棋盘大小请在难度菜单中选择。", editCount: n => `地雷 <b>${n}</b> 颗`, editClear: "清空", editPlay: "玩这个棋盘", editCopy: "复制分享码", editCopyLink: "复制分享链接", editCopied: "已复制,发给朋友吧!", editCopyFail: "复制失败,请直接复制下方框中的内容。", editExit: "退出编辑", editLoad: "载入", editLoadPh: "粘贴分享码或链接", editBad: "无法读取这个代码,请检查后重试。", editLoaded: "已载入棋盘。", editNeed: "请至少放置 1 颗地雷,并至少留出 1 个空格。", editedBoard: "自制棋盘", edited: "自制棋盘", sharedBoard: "这是分享来的棋盘,没有首次点击保护,请小心!", tools: "工具", introText: "第一次来吗?点击格子即可打开,按空格键或右键插旗。在数字上按空格键可一次打开周围的格子。难度和模式可以在左侧菜单中选择。", introOk: "知道了", tip: { lv: { beginner: "新手从这里开始", intermediate: "熟悉之后的下一步", expert: "经典扫雷的最高难度", nothuman: "从这里开始比高级更大", superman: "更大的棋盘,需要专注", alien: "准备好打持久战", god: "最大的棋盘", custom: "自己设定宽、高和地雷数" }, gm: { random: "经典方式:第一次点击也可能踩到地雷", safe: "第一次点击的格子及周围 8 格没有地雷(地雷很多的自定义棋盘只保护点击的格子)", noguess: "只出现仅凭数字就能解完的棋盘,无需猜测", fair: "当没有任何格子能确定安全、只能猜的时候,你打开的格子不会是地雷。还能推出安全格子时去猜,则不受保护" }, fit: "让棋盘适应窗口大小", byNumber: "用相同编号和朋友玩同一局(难度、模式和第一次点击的位置也要相同)", editor: "自己放置地雷制作棋盘,并用链接分享(没有首次点击保护)", hint: "提示一个能由数字确定的格子;无法确定时,提示最安全的格子及其是地雷的概率(该局不计入纪录)", stats: "各难度的局数、胜率和最佳纪录" }, restartNone: "这一局还没有开始。", restarted: "从头重玩同一局。这个棋盘没有首次点击保护,请小心。",
       errW: "宽度请输入 5–100。", errH: "高度请输入 5–60。", errM: n => `地雷数请输入 1–${n}。`,
       statsTitle: "统计", cols: ["难度", "局数", "胜利", "胜率", "连胜 (最高)", "最佳", "最佳 3BV/s", "总游戏时间"], close: "关闭", reset: "重置",
       fb: "反馈", fbPh: "写下改进建议或发现的问题", fbSend: "发送", fbSending: "发送中…", fbSent: "已发送,谢谢!", fbEmpty: "请先输入内容。", fbFail: "发送失败,请稍后再试。", 
       resetAsk: "清除所有统计吗?正在进行的这一局也不会被记录。", resetYes: "清除", sec: s => `${s}秒`,
-      restartedFirst: "重玩同一局。为了让开局安全,已重新打开你第一次打开的格子。", restartTip: "用相同的地雷布局再玩一次。在首次点击安全和无需猜测模式下,开局时第一次打开的格子是打开的",
+      restartedFirst: "重玩同一局。为了让开局安全,已重新打开你第一次打开的格子。", restartTip: "用相同的地雷布局再玩一次。除完全随机外的模式下,开局时第一次打开的格子是打开的",
       controlsTouch: "点按: 打开 · 长按(或插旗模式): 插旗 · 点按数字: 打开周围",
       pause: "暂停", pausedMsg: "已暂停。点击棋盘或按 P 继续。", pauseCover: "已暂停 · 点击继续",
       daily: "每日一局", dailyReady: d => `${d} 的每日一局:所有人玩同一个棋盘。开局时中央已打开,从你的第一步开始计时。`, dailyBest: x => `今日最佳 ${x}。再挑战一次吧。`,
@@ -640,6 +650,9 @@
       cs: { closed: "未打开", flag: "旗子", empty: "空白", num: n => `数字 ${n}`, mine: "地雷", boom: "踩到的地雷", wrong: "错误的旗子" }, cellName: (r, c, s) => `第${r}行第${c}列,${s}`,
       menu: "菜单", zoomIn: "放大", zoomOut: "缩小",
       hintGuess: p => `仅凭数字无法确定任何格子,需要猜测。闪橙光的格子最安全(是地雷的概率为 ${p}%)。`,
+      fairMoved: "这里只能靠猜,所以把地雷移到了别处,你打开的格子是安全的。", loseFairSafe: "踩到地雷了。当时还有能由数字确定安全的格子,所以这次猜测不受保护。", loseFairMine: "踩到地雷了。根据数字这里一定有地雷,所以无法保护。",
+      fairOn: "猜测保护模式:当没有任何格子能确定安全、只能猜的时候,你打开的格子不会是地雷。",
+      hintFair: "现在仅凭数字无法确定任何格子。在猜测保护模式下,现在无论打开哪个格子都不会是地雷。",
       undoLose: "撤销并继续", undone: "已在踩到的地雷上插旗,游戏继续。这一局不计入胜利和纪录。",
       winUndone: t => `通关! ${t}(使用过撤销,不计入胜利)`, streakLine: n => `${n} 连胜`,
       introTextTouch: "第一次来吗?点按格子即可打开,长按可以插旗。点按已打开的数字可一次打开周围的格子。难度和模式可以在菜单中选择。",
@@ -848,26 +861,49 @@
   // and the mine total allow, and reports cells that are safe in all of them or a mine in all of them.
   // It counts the arrangements too, which gives every closed cell its exact chance of being a mine (`odds`):
   // what the hint goes by when nothing is certain and a guess has to be made.
+  // The mines the quick rules prove are set aside first: without them the edge falls apart into smaller groups.
   // complete: false when it ran past `budget` search steps (then nothing is claimed either way).
   // A generator that yields every few thousand steps, so the page can run it in slices; exactCheck() runs it straight through.
-  function* exactSteps(N, m, opened, cnt, budget) {
+  //
+  // `keep` ({ clear, rand }, optional) is for the mode where a forced guess is never a mine. It asks for `draw`: a whole
+  // layout picked evenly, with keep.rand, from every arrangement that leaves the cells marked in keep.clear without a mine
+  // (null when there is none, or when some cell is proven safe: the check then stops at once, as no guess was forced).
+  // The group holding those cells is searched first, with them in front, so a check that runs out of budget can still
+  // hand back the arrangements of that group it met (`part`).
+  function* exactSteps(N, m, opened, cnt, budget, keep) {
     const n = N.length, cons = [], rem = [], consOf = new Map();   // rem: mines each number still needs
+    const known = new Uint8Array(n), sure = [];   // mines the quick rules prove
+    for (;;) {
+      const r = deduce(N, m, opened, cnt, known);
+      if (r.invalid) return { complete: true, invalid: true };
+      if (keep && r.safe.length) return { complete: true, safe: r.safe, mines: sure, odds: null, draw: null };
+      if (!r.mines.length) break;
+      for (const j of r.mines) { known[j] = 1; sure.push(j); }
+    }
+    if (keep && sure.some(j => keep.clear[j])) return { complete: true, safe: [], mines: sure, odds: null, draw: null };
+    m -= sure.length;   // from here on only the cells still in doubt, and the mines left for them
+    yield;
     let closed = 0;
     for (let i = 0; i < n; i++) {
-      if (!opened[i]) { closed++; continue; }
-      const cells = N[i].filter(j => !opened[j]);
+      if (!opened[i]) { if (!known[i]) closed++; continue; }
+      const cells = [];
+      let need = cnt[i];
+      for (const j of N[i]) if (known[j]) need--; else if (!opened[j]) cells.push(j);
       if (!cells.length) continue;
       const k = cons.length;
-      cons.push(cells); rem.push(cnt[i]);
+      cons.push(cells); rem.push(need);
       for (const j of cells) { let l = consOf.get(j); if (!l) consOf.set(j, l = []); l.push(k); }
     }
     const free = cons.map(c => c.length);   // cells each number still has unassigned
-    for (let k = 0; k < cons.length; k++) if (rem[k] > free[k]) return { complete: true, invalid: true };
+    for (let k = 0; k < cons.length; k++) if (rem[k] < 0 || rem[k] > free[k]) return { complete: true, invalid: true };
     const sea = closed - consOf.size;   // closed cells no number touches
     // independent groups of edge cells
     const groups = [], seenC = new Uint8Array(cons.length), seenX = new Set();
-    for (let s = 0; s < cons.length; s++) {
-      if (seenC[s]) continue;
+    let s0 = 0;
+    if (keep) for (let k = 0; k < cons.length; k++) if (cons[k].some(x => keep.clear[x])) { s0 = k; break; }
+    for (let i = 0; i <= cons.length; i++) {
+      const s = i ? i - 1 : s0;
+      if (s >= cons.length || seenC[s]) continue;
       const cells = [], q = [s]; seenC[s] = 1;
       while (q.length) {
         const k = q.pop();
@@ -876,15 +912,21 @@
           for (const k2 of consOf.get(x)) if (!seenC[k2]) { seenC[k2] = 1; q.push(k2); }
         }
       }
+      if (keep && !groups.length) cells.sort((a, b) => keep.clear[b] - keep.clear[a]);
       groups.push(cells);
     }
+    const first = !!keep && groups.length > 0 && groups[0].some(x => keep.clear[x]);   // the cells to keep clear sit on the edge
+    const partOf = byK => !keep ? null : !first ? [{ cells: [], val: [] }] : [...byK.values()].filter(e => e.alt).map(e => ({ cells: groups[0], val: e.pick }));
     yield;
     let steps = 0;
     const res = [];
     for (const cells of groups) {
       // depth-first over the group's cells without recursion: stage[d] = next value to try at depth d (2: both tried)
-      // byK: for each mine count k this group can hold, how many arrangements have k mines (n) and in how many of them each cell is one
+      // byK: for each mine count k this group can hold, how many arrangements have k mines (n) and in how many of them each cell is one;
+      // with `keep` also how many leave its cells clear (alt), and one of those picked evenly as they come by (pick)
       const len = cells.length, cs = cells.map(x => consOf.get(x)), val = new Int8Array(len).fill(-1), stage = new Uint8Array(len + 1), byK = new Map();
+      const must = [];
+      if (keep) cells.forEach((x, t) => { if (keep.clear[x]) must.push(t); });
       let mineN = 0, d = 0;
       const put = (t, v) => {
         let ok = mineN + v <= m;
@@ -894,12 +936,17 @@
       };
       const take = t => { const v = val[t]; for (const k of cs[t]) { free[k]++; rem[k] += v; } mineN -= v; val[t] = -1; };
       while (d >= 0) {
-        if (++steps > budget) return { complete: false };
+        if (++steps > budget) return { complete: false, part: partOf(res.length ? res[0].byK : byK) };
         if (!(steps & 4095)) yield;
         if (d === len) {
           let e = byK.get(mineN);
-          if (!e) byK.set(mineN, e = { n: 0, mine: new Float64Array(len) });
+          if (!e) byK.set(mineN, e = { n: 0, mine: new Float64Array(len), alt: 0, pick: null });
           e.n++; for (let t = 0; t < len; t++) e.mine[t] += val[t];
+          if (keep) {
+            let ok = true;
+            for (const t of must) if (val[t]) { ok = false; break; }
+            if (ok && keep.rand() * ++e.alt < 1) e.pick = val.slice();   // the i-th one replaces the pick one time in i
+          }
           steps += len >> 4;
           d--; continue;
         }
@@ -918,7 +965,7 @@
     const pre = [unit], suf = new Array(C + 1); suf[C] = unit;
     for (let c = 0; c < C; c++) { pre.push(add(pre[c], res[c].ks)); yield; }
     for (let c = C - 1; c >= 0; c--) { suf[c] = add(suf[c + 1], res[c].ks); yield; }
-    const safe = [], mines = [];
+    const safe = [], mines = sure.slice();
     for (let c = 0; c < C; c++) {
       const P = pre[c], S = suf[c + 1], sc = new Int32Array(cap + 2);   // prefix sums of S for range checks
       for (let a = 0; a <= cap; a++) sc[a + 1] = sc[a] + S[a];
@@ -937,20 +984,23 @@
       const F = pre[C];
       let mineOk = false, safeOk = false;
       for (let T = 0; T <= cap; T++) if (F[T]) { const s = m - T; if (s >= 1 && s <= sea) mineOk = true; if (s >= 0 && s <= sea - 1) safeOk = true; }
-      if (!mineOk || !safeOk) for (let i = 0; i < n; i++) if (!opened[i] && !consOf.has(i)) (mineOk ? mines : safe).push(i);
+      if (!mineOk || !safeOk) for (let i = 0; i < n; i++) if (!opened[i] && !known[i] && !consOf.has(i)) (mineOk ? mines : safe).push(i);
     }
     // Chances. An arrangement of the edge with K mines can be finished in C(sea, m - K) ways by the cells no number touches,
     // so it counts that many times. The true counts overflow, so every table is kept relative to its largest entry;
     // each chance is a ratio taken inside one set of tables, where the scaling cancels.
-    const top = Math.min(m, consOf.size), seaW = new Float64Array(top + 1);   // seaW[K] ∝ C(sea, m - K)
-    {
-      const lo = Math.max(0, m - top);   // fewest mines the sea can be left with
+    const top = Math.min(m, consOf.size);
+    const seaWays = size => {   // [K] ∝ C(size, m - K): ways `size` such cells take the mines K on the edge leave over
+      const W = new Float64Array(top + 1), lo = Math.max(0, m - top);   // lo: fewest mines they can be left with
+      if (lo > size) return W;
       let l = 0, max = -Infinity;
-      for (let i = 1; i <= lo; i++) l += Math.log((sea - lo + i) / i);   // log C(sea, lo)
+      for (let i = 1; i <= lo; i++) l += Math.log((size - lo + i) / i);   // log C(size, lo)
       const lw = new Float64Array(top + 1).fill(-Infinity);
-      for (let s = lo; s <= Math.min(m, sea); s++) { lw[m - s] = l; if (l > max) max = l; l += Math.log((sea - s) / (s + 1)); }
-      for (let K = 0; K <= top; K++) seaW[K] = Math.exp(lw[K] - max);
-    }
+      for (let s = lo; s <= Math.min(m, size); s++) { lw[m - s] = l; if (l > max) max = l; l += Math.log((size - s) / (s + 1)); }
+      for (let K = 0; K <= top; K++) W[K] = Math.exp(lw[K] - max);
+      return W;
+    };
+    const seaW = seaWays(sea);
     const scale = A => { let x = 0; for (const v of A) if (v > x) x = v; if (x > 0) for (let i = 0; i < A.length; i++) A[i] /= x; return A; };
     const preW = [new Float64Array(top + 1)], sufW = new Array(C + 1);   // preW[c][a]: ways the groups before c hold a mines; sufW[c][a]: ways to finish from group c on once a are placed
     preW[0][0] = 1; sufW[C] = seaW;
@@ -964,8 +1014,8 @@
       for (const [k, e] of res[c].byK) for (let a = 0; a + k <= top; a++) if (A[a + k]) B[a] += A[a + k] * e.n;
       sufW[c] = scale(B); yield;
     }
-    const odds = { cells: [], p: [], sea: null };
-    for (let c = 0; c < C; c++) {
+    let odds = { cells: sure.slice(), p: sure.map(() => 1), sea: null };
+    for (let c = 0; c < C && odds; c++) {
       const A = preW[c], B = sufW[c + 1], len = res[c].cells.length, M = new Float64Array(len);
       let W = 0;
       for (const [k, e] of res[c].byK) {
@@ -975,20 +1025,54 @@
         W += e.n * r;
         for (let t = 0; t < len; t++) M[t] += e.mine[t] * r;
       }
-      if (!(W > 0)) return { complete: true, safe, mines, odds: null };
-      res[c].cells.forEach((x, t) => { odds.cells.push(x); odds.p.push(M[t] / W); });
+      if (W > 0) res[c].cells.forEach((x, t) => { odds.cells.push(x); odds.p.push(M[t] / W); }); else odds = null;
       yield;
     }
-    if (sea) {
+    if (sea && odds) {
       const A = preW[C];
       let W = 0, M = 0;
       for (let K = 0; K <= top; K++) { const w = A[K] * seaW[K]; W += w; M += w * (m - K) / sea; }
-      if (!(W > 0)) return { complete: true, safe, mines, odds: null };
-      odds.sea = M / W;
+      if (W > 0) odds.sea = M / W; else odds = null;
     }
-    return { complete: true, safe, mines, odds };
+    // The layout for `keep`. Group by group it settles how many mines the group holds — as often as the arrangements
+    // that leave the cells clear call for, counting what the later groups and the sea can still make of the rest —
+    // and takes the group's pick for that count; the mines left over go to the cells no number touches.
+    let draw = null;
+    if (keep && !safe.length) {
+      const pool = [];   // cells no number touches that may hold a mine
+      for (let i = 0; i < n; i++) if (!opened[i] && !known[i] && !consOf.has(i) && !keep.clear[i]) pool.push(i);
+      const tail = new Array(C + 1); tail[C] = seaWays(pool.length);
+      for (let c = C - 1; c >= 0; c--) {
+        const A = tail[c + 1], B = new Float64Array(top + 1);
+        for (const [k, e] of res[c].byK) if (e.alt) for (let a = 0; a + k <= top; a++) if (A[a + k]) B[a] += A[a + k] * e.alt;
+        tail[c] = scale(B); yield;
+      }
+      if (tail[0][0] > 0) {
+        draw = new Uint8Array(n);
+        for (const j of sure) draw[j] = 1;
+        let a = 0;
+        for (let c = 0; c < C && draw; c++) {
+          const A = tail[c + 1], opts = [];
+          let W = 0;
+          for (const [k, e] of res[c].byK) if (e.alt && a + k <= top && A[a + k] > 0) { const w = e.alt * A[a + k]; opts.push([k, e.pick, w]); W += w; }
+          if (!opts.length) { draw = null; break; }
+          let r = keep.rand() * W, o = opts[opts.length - 1];
+          for (const x of opts) { r -= x[2]; if (r < 0) { o = x; break; } }
+          res[c].cells.forEach((x, t) => { draw[x] = o[1][t]; });
+          a += o[0];
+        }
+        const left = m - a;
+        if (draw && (left < 0 || left > pool.length)) draw = null;
+        if (draw) for (let k = 0; k < left; k++) {
+          const j = k + Math.floor(keep.rand() * (pool.length - k));
+          [pool[k], pool[j]] = [pool[j], pool[k]];
+          draw[pool[k]] = 1;
+        }
+      }
+    }
+    return { complete: true, safe, mines, odds, draw };
   }
-  const exactCheck = (N, m, opened, cnt, budget) => runAll(exactSteps(N, m, opened, cnt, budget));
+  const exactCheck = (N, m, opened, cnt, budget, keep) => runAll(exactSteps(N, m, opened, cnt, budget, keep));
 
   // Runs a generator in slices between other page work, so clicks, keys and painting get through.
   // A slice stops at the first yield after `ms`: `ms` is a target, and a slice can run over by one step
@@ -1202,7 +1286,8 @@
       if (!savedMines) placeMines(i);
       begin();
     }
-    if (mines[i]) return lose(i);
+    const why = mines[i] ? spare([i]) : null;   // safe-guess mode may clear the cell
+    if (mines[i]) return lose(i, why);
     reveal(i);
     if (firstClick === i && firstGuard === 1 && openedCount && !over) setStatus("denseFirst", null, "info");
     checkWin();
@@ -1213,8 +1298,10 @@
     const ns = neighbors(i);
     if (ns.reduce((s, j) => s + flags[j], 0) !== counts[i]) return;
     if (!started) begin();   // a board that starts with cells already open (daily) starts its clock here
-    for (const j of ns) if (!open[j] && !flags[j]) {
-      if (mines[j]) return lose(j);
+    const todo = ns.filter(j => !open[j] && !flags[j]);
+    const why = todo.some(j => mines[j]) ? spare(todo) : null;
+    for (const j of todo) {
+      if (mines[j]) return lose(j, why);
       reveal(j);
     }
     checkWin();
@@ -1244,7 +1331,7 @@
     return `${h}:${String(m).padStart(2, "0")}:${String(x).padStart(2, "0")}`;
   };
 
-  function lose(i) {
+  function lose(i, why) {
     stop(); lostAt = performance.now(); lostCell = i;
     const s = activeKey && stats[activeKey];
     if (s) { s.streak = 0; s.unfinished = false; write(STATS, stats); }
@@ -1253,7 +1340,64 @@
       if (!mines[k] && flags[k]) { cells[k].classList.remove("flag"); cells[k].classList.add("open", "wrong"); labelCell(k); }
     }
     cells[i].classList.add("boom"); labelCell(i);
-    setStatus("lose", null, "lose", { key: "undoLose", run: undoLose });
+    setStatus(why || "lose", null, "lose", { key: "undoLose", run: undoLose });
+  }
+
+  // ---------- safe-guess mode ----------
+  // When the numbers prove no cell safe the player has to guess, and in this mode that guess is never a mine.
+  // If the cells about to be opened (one cell, or the cells a chord opens) hide a mine, the mines are laid out again:
+  // a layout picked evenly from all those that fit the open numbers and leave these cells clear. The open numbers
+  // stay true and the mine count stays the same, so nothing the player has worked out changes.
+  // No help when a safe cell could still be worked out (the guess was not forced), or when the numbers leave no way
+  // for the cells to be clear. Built boards and the daily board are never changed.
+  // Returns the status to show if the move still ends on a mine (null: the plain one).
+  const fairGame = () => gameMode === "fair" && cfg.key !== "edited" && cfg.key !== "daily";
+  function spare(S) {
+    if (!fairGame()) return null;
+    const N = nbs(), clear = new Uint8Array(N.length);
+    for (const j of S) clear[j] = 1;
+    let x = null;
+    try { x = exactCheck(N, cfg.m, open, counts, exactBudget, { clear, rand: Math.random }); } catch {}
+    if (!x || x.invalid) return null;
+    let tries = [x.draw];
+    if (x.complete) {
+      if (x.safe.length) return "loseFairSafe";
+      if (!x.draw) return "loseFairMine";
+    } else tries = (x.part || []).map(part => patched(part, clear));   // too big to check in full: the player gets the benefit of the doubt
+    const lay = tries.find(l => l && fitsOpen(l, clear));   // checked once more against the board before it is used
+    if (!lay) return null;
+    mines = lay; computeCounts();
+    setStatus("fairMoved", null, "info");
+    return null;
+  }
+  // The layout as it stands with one group of edge cells swapped for another arrangement (part), the `clear` cells
+  // emptied, and the cells no number touches taking up the difference in mines. null if they cannot.
+  function patched(part, clear) {
+    const N = nbs(), lay = mines.slice(), empty = [], full = [];
+    part.cells.forEach((c, t) => { lay[c] = part.val[t]; });
+    for (let i = 0; i < lay.length; i++) {
+      if (open[i] || N[i].some(j => open[j])) continue;
+      if (clear[i]) lay[i] = 0; else (lay[i] ? full : empty).push(i);
+    }
+    const d = cfg.m - lay.reduce((a, b) => a + b, 0), from = d > 0 ? empty : full;   // d mines to add, or -d to take away
+    if (Math.abs(d) > from.length) return null;
+    for (let k = 0; k < Math.abs(d); k++) {
+      const j = k + Math.floor(Math.random() * (from.length - k));
+      [from[k], from[j]] = [from[j], from[k]];
+      lay[from[k]] = d > 0 ? 1 : 0;
+    }
+    return lay;
+  }
+  // Does this layout have the right number of mines, none on an open or `clear` cell, and every open number right?
+  function fitsOpen(lay, clear) {
+    const N = nbs();
+    let total = 0;
+    for (let i = 0; i < lay.length; i++) {
+      total += lay[i];
+      if (lay[i] && (open[i] || clear[i])) return false;
+      if (open[i]) { let n = 0; for (const j of N[i]) n += lay[j]; if (n !== counts[i]) return false; }
+    }
+    return total === cfg.m && lay.length === open.length;
   }
   // Take back the step onto a mine and play on (a long game need not end on one slip or one coin flip).
   // The board returns to how it was, with a flag on that mine, and the clock leaves out the time spent looking at the loss.
@@ -1432,6 +1576,7 @@
   }
   function showHint(mv) {
     if (mv.type === "guess") {   // a guess is needed: say so, and with the chances known point at the safest cell
+      if (fairGame()) { hintUsed = true; setStatus("hintFair", null, "info"); return; }   // safe-guess mode: any cell will do
       if (!mv.best) { setStatus("noLogic", null, "info"); return; }
       hintUsed = true;
       flash(mv.best.cell, "hint-guess");
@@ -1646,7 +1791,7 @@
   }
 
   // ---------- game mode ----------
-  const GMODES = ["random", "safe", "noguess"];
+  const GMODES = ["random", "safe", "fair", "noguess"];
   let gameMode = read("minesweeper-gamemode", "safe");
   if (!GMODES.includes(gameMode)) gameMode = "safe";
   function renderGameModes() {
@@ -1659,7 +1804,10 @@
   $("gmodes").addEventListener("click", e => {
     const b = e.target.closest("button[data-gmode]"); if (!b || b.dataset.gmode === gameMode) return;
     gameMode = b.dataset.gmode; write("minesweeper-gamemode", gameMode);
-    renderGameModes(); if (!editing) newGame();
+    renderGameModes();
+    if (editing) return;
+    newGame();
+    if (gameMode === "fair") setStatus("fairOn", null, "info");   // the one mode whose name does not explain itself
   });
 
 
@@ -1863,7 +2011,7 @@
   // the browser's data was cleared. Reading a file never throws anything away: it is merged with what is here
   // (games, wins and play time: the larger number; best time: the lower; best 3BV/s and longest streak: the higher),
   // so reading the same file twice changes nothing.
-  const STAT_KEY = new RegExp(`^(?:daily|(?:${Object.keys(LEVELS).join("|")}|custom-\\d{1,3}x\\d{1,2}-\\d{1,4})(?:@random|@noguess)?)$`);
+  const STAT_KEY = new RegExp(`^(?:daily|(?:${Object.keys(LEVELS).join("|")}|custom-\\d{1,3}x\\d{1,2}-\\d{1,4})(?:@random|@noguess|@fair)?)$`);
   function setBackupMsg(key, cls) { $("backupMsg").textContent = key ? L()[key] : ""; $("backupMsg").className = cls || ""; $("backupMsg").dataset.key = key || ""; }
   function exportStats() {
     const data = { app: "MINE:D", version: 1, saved: new Date().toISOString(), stats, daily: dailyLog };
